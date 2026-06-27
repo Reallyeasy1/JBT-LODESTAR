@@ -215,10 +215,26 @@ For tasks touching multiple areas use `lodestar-orchestrate`. For single-area ta
 - `lodestar-sprint-planning` — guided sprint planning (asks all 10 questions first, then assigns issues)
 - `lodestar-github-workflow` — claim an issue, create a branch, open a PR
 
-### Change History
+**PR review:** To review a pull request and optionally post findings directly to GitHub, use `/pr-review`:
+```
+/pr-review --pr 17              # review PR #17, then offer to post findings to GitHub
+/pr-review --pr 17 --post       # same, posts without asking
+/pr-review --pr 17 --focus security  # weighted security pass
+/pr-review                      # review current branch (auto-detects open PR)
+```
+BLOCKER/HIGH findings post as review comments; MEDIUM/LOW/PRAISE as a single summary comment. Never auto-approves or merges.
 
+**Planning docs:** `_workspace/` — read `agent_handoff.md` first in every session.
+
+**Shipped-changes log:** `CHANGELOG.md` — append-only record of what has been built and merged. Maintained by the orchestrator post-merge; PR authors supply a one-line entry in their PR body.
+
+**Agent teams require:** `export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
+
+**Change History:**
 | Date | Change | Target | Reason |
 |------|--------|--------|--------|
 | 2026-06-27 | Initial harness setup | All | Bootstrap 6-agent team for parallel development |
-| 2026-06-27 | Add lodestar-sprint-planning skill | `.claude/skills/` | Guided sprint planning with upfront Q&A before issue selection |
-| 2026-06-27 | Add Direction section + workflow map | `CLAUDE.md` | Link project/product direction to `.claude/agents/`, skills, `_workspace/` |
+| 2026-06-27 | Add lodestar-sprint-planning skill | .claude/skills/ | Guided sprint planning with upfront Q&A before issue selection |
+| 2026-06-27 | Add Direction section + workflow map | CLAUDE.md | Link project/product direction to `.claude/agents/`, skills, `_workspace/` |
+| 2026-06-27 | Add CHANGELOG.md + wire into PR/merge workflow | CHANGELOG.md, lodestar-github-workflow, /sprint, lodestar-orchestrate, PR template | Durable append-only record of shipped work; single-writer pattern avoids parallel-branch conflicts |
+| 2026-06-27 | Add /pr-review command with GitHub posting | .claude/skills/pr-review/, .claude/commands/pr-review.md | Review PRs and post findings directly to GitHub; --post skips confirmation |

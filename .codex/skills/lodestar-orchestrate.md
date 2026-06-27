@@ -7,6 +7,10 @@ description: Playbook for cross-role coordination, phase transitions, sprint pla
 
 Use for cross-role coordination, phase transitions, sprint planning, blocker resolution, and integration.
 
+## Sprint Planning
+
+When the user asks to plan a sprint, start a new sprint, or asks "what should we build this sprint?", stop and use `.codex/skills/lodestar-sprint-planning.md` instead of continuing here. That playbook asks all required questions first, then produces the sprint plan.
+
 ## Phase 0 - Context
 
 1. Read `_workspace/agent_handoff.md`.

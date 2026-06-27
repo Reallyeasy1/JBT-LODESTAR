@@ -4,6 +4,13 @@
 
 Closes #<!-- issue number -->
 
+## Changelog Entry
+
+<!-- One line for CHANGELOG.md [Unreleased]. Category = Added | Changed | Fixed | Removed.
+     Format: `- Category: short description (#issue)`. Write "none" for chore/docs-only PRs.
+     The orchestrator transcribes this into CHANGELOG.md after merge — do NOT edit CHANGELOG.md on your branch. -->
+- Added: 
+
 ## Files Changed
 
 <!-- List each file and what changed -->

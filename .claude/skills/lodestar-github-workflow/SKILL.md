@@ -84,6 +84,11 @@ Before writing any code:
    ## Summary
    [What was built and why]
 
+   ## Changelog Entry
+   <!-- One line transcribed by orchestrator into CHANGELOG.md [Unreleased] after merge.
+        Do NOT edit CHANGELOG.md on your branch — orchestrator is the single writer. -->
+   - Added: [short description] (#N)
+
    ## Files Changed
    - [file]: [what changed]
 
@@ -122,11 +127,14 @@ After QA passes:
    ```bash
    gh issue edit N --add-label "status:done" --remove-label "status:review"
    ```
-4. Check if any `blocked-by-*` issues are now unblocked:
+4. **Orchestrator transcribes the PR's `## Changelog Entry` line into `CHANGELOG.md` `[Unreleased]`** under the correct heading (`Added` / `Changed` / `Fixed` / `Removed`), then commits `CHANGELOG.md` to `main` together with the `agent_handoff.md` handoff update.
+   - **Agents never edit `CHANGELOG.md` on their feature branch** — the orchestrator is the single writer on `main`, which eliminates merge conflicts across parallel branches.
+   - If a PR has no Changelog Entry or says "none", skip (chore/docs PRs).
+5. Check if any `blocked-by-*` issues are now unblocked:
    ```bash
    gh issue list --label "blocked-by-schema" --state open  # if schema issue just closed
    ```
-5. Comment on newly unblocked issues with unblock notice and move to `status:ready`
+6. Comment on newly unblocked issues with unblock notice and move to `status:ready`
 
 ---
 
