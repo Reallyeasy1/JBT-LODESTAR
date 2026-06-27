@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ConfidencePercentageSchema } from "@/ai/schemas/confidence.schema";
 
 export const FollowUpOutputSchema = z.object({
   followUpId: z.string().min(1).optional(),
@@ -6,7 +7,7 @@ export const FollowUpOutputSchema = z.object({
   draftText: z.string().min(1),
   recommendedTiming: z.string().min(1),
   reasoning: z.string().min(1),
-  confidence: z.number().min(0).max(100),
+  confidence: ConfidencePercentageSchema,
   warnings: z.array(z.string().min(1)).default([]),
   requiresUserReview: z.literal(true),
 });

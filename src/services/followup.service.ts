@@ -15,6 +15,10 @@ const UserReviewInvariantSchema = z.object({
   requiresUserReview: z.literal(true),
 });
 
+function toConfidencePercentage(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
 export type GenerateFollowUpInput = {
   contactId: string;
   interactionId?: string;
@@ -80,7 +84,9 @@ export async function generateFollowUp(
     const verified = FollowUpOutputSchema.parse({
       ...generation.output,
       warnings: [...(generation.output.warnings ?? []), ...verification.warnings],
-      confidence: Math.max(0, generation.output.confidence - verification.warnings.length * 5),
+      confidence: toConfidencePercentage(
+        generation.output.confidence - verification.warnings.length * 5,
+      ),
       requiresUserReview: true,
     });
 
