@@ -59,9 +59,30 @@ Before writing any code:
 
 ---
 
+## 2.5 Spec Protocol (hard gate — runs after Claim, before Implementation)
+
+Every issue requires a critic-APPROVED spec before any code is written.
+
+1. Check for an existing approved spec:
+   ```bash
+   ls specs/issue-<N>-*.md 2>/dev/null
+   ```
+   - If the Critic Log shows APPROVED → skip to §3.
+   - Otherwise → author or continue the spec now.
+
+2. Invoke the `lodestar-spec-driven` skill with the issue number.
+   - It will author `specs/issue-<N>-<slug>.md` from `specs/TEMPLATE.md`
+   - Invoke the `spec-critic` agent for a critique loop
+   - Loop until the critic returns APPROVE and stamps the Critic Log
+
+3. **Do not create a branch or write any code until the spec's Critic Log shows APPROVED.**
+
+---
+
 ## 3. Implementation Protocol
 
 1. Read the issue's acceptance criteria — these are your definition of done
+2. Read the approved spec — `specs/issue-<N>-<slug>.md` — this is your implementation contract
 2. Read the files listed in the issue's "Files likely touched" section
 3. Make minimal changes — do not touch files outside the issue scope
 4. Do not refactor unrelated code found during implementation
@@ -83,6 +104,10 @@ Before writing any code:
      --body "$(cat <<'EOF'
    ## Summary
    [What was built and why]
+
+   ## Spec
+   - Spec: `specs/issue-<N>-<slug>.md`
+   - [ ] Spec was critic-APPROVED before implementation began
 
    ## Changelog Entry
    <!-- One line transcribed by orchestrator into CHANGELOG.md [Unreleased] after merge.

@@ -88,6 +88,24 @@ Prefer `parallel-safe` issues when launching multiple agents simultaneously.
 
 ---
 
+## Step 3.5 — Spec Gate (runs for each selected issue, before claim)
+
+Every issue requires a critic-APPROVED spec before implementation. Run this gate for each issue selected in Step 3.
+
+1. Check if an approved spec already exists:
+   ```bash
+   ls specs/issue-<N>-*.md 2>/dev/null
+   ```
+   - If the file exists and its Critic Log shows APPROVED → proceed to Step 4 (claim).
+   - Otherwise → author the spec now via `lodestar-spec-driven` skill.
+
+2. Invoke the `lodestar-spec-driven` skill (which will invoke the `spec-critic` for the loop).
+
+3. **Do not proceed to Step 4 (claim) until the spec is critic-APPROVED.**
+   - If the spec requires escalated product questions the agent cannot answer, use AskUserQuestion and wait for the user before continuing.
+
+---
+
 ## Step 4 — Claim and Launch
 
 For each selected issue:

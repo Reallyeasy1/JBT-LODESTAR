@@ -83,10 +83,11 @@ Assign `status:ready` GitHub issues to agents following this dependency order:
 
 **Per-issue assignment flow:**
 1. Write plan comment on issue (see `lodestar-github-workflow` skill)
-2. Agent implements and opens PR
-3. Agent moves issue to `status:review`
-4. `safety-qa-engineer` reviews
-5. Orchestrator merges on pass or assigns fix to owning agent on BLOCKER
+2. **[Spec gate]** Author spec via `lodestar-spec-driven` → invoke `spec-critic` → loop until APPROVE. No code before APPROVE.
+3. Agent implements (code must match the approved spec) and opens PR — spec file included
+4. Agent moves issue to `status:review`
+5. `safety-qa-engineer` reviews
+6. Orchestrator merges on pass or assigns fix to owning agent on BLOCKER
 
 ---
 

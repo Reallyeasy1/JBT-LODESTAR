@@ -82,6 +82,11 @@ DATABASE_URL="mysql://root:password@localhost:3306/lodestar" npx prisma studio
 The app container has no host port — nginx on `:80` is the only entry point.
 CI runs automatically on push/PR to `main` via `.github/workflows/ci.yml` (lint + typecheck + prisma validate + build).
 
+```bash
+# Spec-driven development — generate + critic-approve a spec before implementing
+/spec <issue-number>       # e.g. /spec 7
+```
+
 ---
 
 ## Stack
@@ -236,6 +241,10 @@ For tasks touching multiple areas use `lodestar-orchestrate`. For single-area ta
 - `lodestar-safety-qa` — safety reviews, build checks, contract verification
 - `lodestar-sprint-planning` — guided sprint planning (asks all 10 questions first, then assigns issues)
 - `lodestar-github-workflow` — claim an issue, create a branch, open a PR
+- `lodestar-spec-driven` — author a spec for an issue and get it critic-APPROVED (hard gate before any code)
+- `lodestar-spec-critic` — adversarial spec reviewer; returns APPROVE or REVISE with BLOCKER/QUESTION/SUGGESTION findings
+
+**Spec-driven gate:** every issue requires a critic-APPROVED spec in `specs/issue-<N>-<slug>.md` before a branch is created. Run `/spec <N>` to trigger the spec + critic loop. Specs are versioned with the code in `specs/` (not in `_workspace/`).
 
 **PR review:** To review a pull request and optionally post findings directly to GitHub, use `/pr-review`:
 ```
@@ -261,3 +270,4 @@ BLOCKER/HIGH findings post as review comments; MEDIUM/LOW/PRAISE as a single sum
 | 2026-06-27 | Add CHANGELOG.md + wire into PR/merge workflow | CHANGELOG.md, lodestar-github-workflow, /sprint, lodestar-orchestrate, PR template | Durable append-only record of shipped work; single-writer pattern avoids parallel-branch conflicts |
 | 2026-06-27 | Add /pr-review command with GitHub posting | .claude/skills/pr-review/, .claude/commands/pr-review.md | Review PRs and post findings directly to GitHub; --post skips confirmation |
 | 2026-06-27 | Add CI workflow + Docker/nginx local stack | .github/workflows/ci.yml, Dockerfile, docker-compose.yml, nginx/ | Reproducible local run via docker compose; CI gates lint/typecheck/build on every push/PR |
+| 2026-06-27 | Add spec-driven development + spec-critic gate | specs/, .claude/agents/spec-critic.md, lodestar-spec-driven, lodestar-spec-critic, github-workflow, sprint, orchestrate, PR template | Mandatory critic-APPROVED spec per issue before any code; catches wrong-thing-built before effort is spent |

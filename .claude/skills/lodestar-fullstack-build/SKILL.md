@@ -16,8 +16,13 @@ Implement the user-facing Lodestar product in Next.js App Router with TypeScript
 
 ---
 
+## Step 0: Spec Gate (hard — runs before any code)
+Invoke the `lodestar-spec-driven` skill for this issue. Author `specs/issue-<N>-<slug>.md`, get `spec-critic` APPROVE. **No branch, no code until APPROVED.** See `specs/TEMPLATE.md` for the required shape.
+
+---
+
 ## Step 1: Claim the Issue
-Follow `lodestar-github-workflow` skill — claim, branch, comment plan.
+Follow `lodestar-github-workflow` skill — claim, branch, comment plan. Branch only after spec is APPROVED.
 
 ---
 

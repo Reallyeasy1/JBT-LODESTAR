@@ -4,6 +4,11 @@
 
 Closes #<!-- issue number -->
 
+## Spec
+
+- Spec: `specs/issue-<!-- N -->-<!-- slug -->.md`
+- [ ] Spec was critic-APPROVED before implementation began
+
 ## Changelog Entry
 
 <!-- One line for CHANGELOG.md [Unreleased]. Category = Added | Changed | Fixed | Removed.

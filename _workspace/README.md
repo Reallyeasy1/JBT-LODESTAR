@@ -10,6 +10,8 @@ This directory contains orchestrator-maintained planning documents for the Lodes
 
 **All files here are created and updated by `lodestar-orchestrator` only.**
 
+> **Specs live in `specs/` at the repo root** (versioned with code, committed in each issue's PR), not in `_workspace/`.
+
 ## Files
 
 | File | Owner | Purpose |
