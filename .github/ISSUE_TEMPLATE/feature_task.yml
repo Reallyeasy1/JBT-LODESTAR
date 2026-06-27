@@ -1,0 +1,119 @@
+name: Feature Task
+description: A new feature or enhancement for Lodestar
+title: "[feat] "
+labels: ["status:ready"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for new features and enhancements.
+        Fill all fields so an agent can pick this up without asking questions.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: One sentence — what user outcome does this enable?
+      placeholder: "The user can see ranked contacts on the event dashboard."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why does this issue exist? What dependency does it serve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Exactly what to build. List specific files if known.
+    validations:
+      required: true
+
+  - type: textarea
+    id: files
+    attributes:
+      label: Files likely touched
+      description: List files that will probably be created or modified.
+      placeholder: |
+        - src/app/events/[eventId]/page.tsx
+        - src/components/events/EventDashboard.tsx
+        - src/app/api/events/[eventId]/route.ts
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Binary pass/fail checks. No subjective criteria.
+      placeholder: |
+        - [ ] /events/[eventId] loads with event name and goal text
+        - [ ] Contact list shows all seeded contacts
+        - [ ] Page works at 375px mobile viewport
+    validations:
+      required: true
+
+  - type: textarea
+    id: testplan
+    attributes:
+      label: Test plan
+      description: Steps to manually verify the acceptance criteria.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Issue numbers this depends on, or "None".
+      placeholder: "Depends on #2 (schema must be complete)"
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - area:frontend
+        - area:backend
+        - area:data
+        - area:ai
+        - area:docs
+        - area:devops
+    validations:
+      required: true
+
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Suggested agent
+      options:
+        - agent:fullstack-builder
+        - agent:data-backend-engineer
+        - agent:ai-workflow-engineer
+        - agent:product-architect
+        - agent:safety-qa-engineer
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - priority:p0
+        - priority:p1
+        - priority:p2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      options:
+        - size:s
+        - size:m
+        - size:l
+    validations:
+      required: true

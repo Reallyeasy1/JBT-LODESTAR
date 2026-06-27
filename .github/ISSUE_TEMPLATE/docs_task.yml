@@ -1,0 +1,57 @@
+name: Docs / Planning Task
+description: Product scope, OKF files, CLAUDE.md, _workspace docs, or demo script updates
+title: "[docs] "
+labels: ["area:docs", "status:ready", "parallel-safe"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for documentation, planning artifact updates, OKF knowledge files, or demo script changes.
+
+        **OKF reminder:** okf/ files must never contain contact names, emails, uploaded content, or agent run logs.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What doc needs creating or updating, and why?
+    validations:
+      required: true
+
+  - type: textarea
+    id: files
+    attributes:
+      label: Files to create or update
+      placeholder: |
+        - _workspace/product_scope.md
+        - okf/concepts/opportunity-scoring.md
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] product_scope.md contains 30-second demo script
+        - [ ] OKF file contains no private user data
+    validations:
+      required: true
+
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Suggested agent
+      options:
+        - agent:product-architect
+        - agent:ai-workflow-engineer
+        - agent:safety-qa-engineer
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - priority:p0
+        - priority:p1
+        - priority:p2
+    validations:
+      required: true

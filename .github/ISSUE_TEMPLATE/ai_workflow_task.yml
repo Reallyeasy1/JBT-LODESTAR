@@ -1,0 +1,92 @@
+name: AI Workflow Task
+description: A task for bounded AI service functions, prompts, Zod schemas, or OKF files
+title: "[ai] "
+labels: ["area:ai", "status:ready"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for AI service functions, LLM provider work, Zod schemas, OKF knowledge files, or the verification service.
+
+        **Reminder:** All AI services must be bounded TypeScript functions. No autonomous loops.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What service or schema needs to be built or updated?
+    validations:
+      required: true
+
+  - type: textarea
+    id: service
+    attributes:
+      label: Service function signature
+      description: Expected TypeScript signature(s) for the service function(s).
+      placeholder: |
+        async function generateBriefing(contactId: string, userId: string): Promise<Briefing>
+    validations:
+      required: true
+
+  - type: textarea
+    id: schema
+    attributes:
+      label: Zod schema required
+      description: Which Zod schema(s) are needed or being modified?
+      placeholder: "BriefingOutputSchema in src/ai/schemas/briefing.schema.ts"
+
+  - type: textarea
+    id: mock
+    attributes:
+      label: Mock AI requirement
+      description: What should the mock return? Must work without API keys.
+      placeholder: "Mock returns plausible BriefingOutputSchema with dummy text for all fields."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] generateBriefing() returns valid BriefingOutputSchema without LLM
+        - [ ] Zod validation runs before any Prisma write
+        - [ ] AgentRun record created for each call
+        - [ ] requiresUserReview: true for follow-up outputs
+    validations:
+      required: true
+
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety requirements
+      description: Cultural guardrails, privacy constraints, or forbidden patterns to enforce.
+      placeholder: "Must not infer cultural identity. Must call verification.service before saving."
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      placeholder: "Depends on #2 (schema)"
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - priority:p0
+        - priority:p1
+        - priority:p2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      options:
+        - size:s
+        - size:m
+        - size:l
+    validations:
+      required: true

@@ -154,3 +154,26 @@ The demo vertical slice: Dashboard → Rank → Open contact → Briefing → Ad
 - No auto-sending follow-ups (always drafts)
 - No AI stereotyping from nationality/ethnicity
 - No overengineering before the core workflow demo works
+
+---
+
+## Harness: Lodestar Agent Team
+
+**Goal:** Coordinate six Claude Code development agents to build Lodestar in parallel using GitHub Issues as the shared task queue.
+
+**Trigger:** For any Lodestar development task involving multiple areas (frontend, data, AI, safety), use the `lodestar-orchestrate` skill. For single-agent tasks, invoke the relevant skill directly:
+- `lodestar-product-planning` — scope, demo script, issue refinement
+- `lodestar-data-backend` — Prisma schema, migrations, seed data
+- `lodestar-fullstack-build` — Next.js pages, components, API routes
+- `lodestar-ai-workflows` — AI services, Zod schemas, OKF files
+- `lodestar-safety-qa` — safety reviews, build checks, contract verification
+- `lodestar-github-workflow` — claim an issue, create a branch, open a PR
+
+**Planning docs:** `_workspace/` — read `agent_handoff.md` first in every session.
+
+**Agent teams require:** `export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
+
+**Change History:**
+| Date | Change | Target | Reason |
+|------|--------|--------|--------|
+| 2026-06-27 | Initial harness setup | All | Bootstrap 6-agent team for parallel development |

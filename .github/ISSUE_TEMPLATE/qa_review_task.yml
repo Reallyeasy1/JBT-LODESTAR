@@ -1,0 +1,67 @@
+name: QA Review Task
+description: A safety, privacy, or quality review task for safety-qa-engineer
+title: "[qa] "
+labels: ["area:qa", "area:safety", "agent:safety-qa-engineer", "status:ready"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for safety audits, QA sweeps, privacy reviews, or contract verification tasks.
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Review scope
+      description: What files, PRs, or areas need reviewing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: checks
+    attributes:
+      label: Specific checks required
+      description: Which items from the QA checklist must be verified?
+      placeholder: |
+        - [ ] No LinkedIn scraping
+        - [ ] requiresUserReview: true in followup service
+        - [ ] No unsanitised prompt input
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Expected output
+      description: What should this review produce?
+      placeholder: |
+        - Updated _workspace/qa_checklist.md
+        - BLOCKER/WARNING/SUGGESTION list on the related PR
+        - Pass/fail verdict
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Depends on
+      placeholder: "Can run after #4, #6, #8 are merged"
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - priority:p0
+        - priority:p1
+        - priority:p2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      options:
+        - size:s
+        - size:m
+        - size:l
+    validations:
+      required: true

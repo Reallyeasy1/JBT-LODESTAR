@@ -1,0 +1,71 @@
+name: Bug Report
+description: Report a bug in Lodestar
+title: "[bug] "
+labels: ["status:ready", "priority:p0"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report bugs here. Include enough detail for an agent to reproduce and fix without asking questions.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      description: What went wrong?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Navigate to /events/[eventId]
+        2. Click "Rank Top Contacts"
+        3. See error: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: files
+    attributes:
+      label: Files likely involved
+      description: Which files are probably causing this?
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - area:frontend
+        - area:backend
+        - area:data
+        - area:ai
+        - area:safety
+    validations:
+      required: true
+
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Suggested agent
+      options:
+        - agent:fullstack-builder
+        - agent:data-backend-engineer
+        - agent:ai-workflow-engineer
+        - agent:safety-qa-engineer
