@@ -823,7 +823,13 @@ export const BriefingOutputSchema = z.object({
   personSummary: z.string(),
   whyTheyMatter: z.string(),
   likelyGoal: z.string().optional(),
-  decisionAuthority: z.enum(["low", "medium", "high", "unknown"]),
+  decisionAuthority: z.enum([
+    "budget_holder",
+    "influencer",
+    "gatekeeper",
+    "end_user",
+    "unknown",
+  ]),
   talkingPoints: z.array(z.string()),
   questionsToAsk: z.array(z.string()),
   culturalNotes: z.array(z.string()),
@@ -854,7 +860,7 @@ export const RankingOutputSchema = z.object({
       ]),
       reasoning: z.string(),
       nextAction: z.string(),
-      confidence: z.number().min(0).max(1),
+      confidence: z.number().int().min(0).max(100), // whole-number percentage
       evidence: z.array(z.string()),
     })
   ),
@@ -869,7 +875,7 @@ export const FollowUpOutputSchema = z.object({
   draftText: z.string(),
   recommendedTiming: z.string(),
   reasoning: z.string(),
-  confidence: z.number().min(0).max(1),
+  confidence: z.number().int().min(0).max(100), // whole-number percentage
   requiresUserReview: z.literal(true),
 });
 ```

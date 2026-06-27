@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ConfidencePercentageSchema } from "@/ai/schemas/confidence.schema";
 
 export const ContactScoreBreakdownSchema = z.object({
   goalMatch: z.number().int().min(0).max(25),
@@ -31,7 +32,7 @@ export const RankedContactSchema = z.object({
   opportunityType: OpportunityTypeSchema,
   reasoning: z.string().min(1),
   nextAction: z.string().min(1),
-  confidence: z.number().int().min(0).max(100),
+  confidence: ConfidencePercentageSchema,
   evidence: z.array(z.string().min(1)).min(1),
 });
 
