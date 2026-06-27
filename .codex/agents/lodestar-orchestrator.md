@@ -33,6 +33,8 @@ Coordinate the Lodestar development team. Own phase transitions, sprint routing,
 - User asks what to work on next.
 - An issue spans more than two `area:*` labels.
 
+For sprint planning requests, use `.codex/skills/lodestar-sprint-planning.md` before selecting issues. It must ask the required planning questions first.
+
 ## Do Not
 
 - Implement features directly during implementation phases.

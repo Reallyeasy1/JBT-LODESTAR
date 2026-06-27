@@ -165,6 +165,7 @@ Use these Codex role playbooks in `.codex/agents/` when work matches their scope
 | Safety, privacy, QA, build/type/lint review | `.codex/agents/safety-qa-engineer.md` |
 
 For sprint launch behavior, use `.codex/commands/sprint.md`.
+For sprint planning requests such as "plan the next sprint" or "what should we build this sprint?", use `.codex/skills/lodestar-sprint-planning.md` first. That playbook asks all required planning questions before reading files or selecting issues.
 
 ## GitHub Issue Workflow
 

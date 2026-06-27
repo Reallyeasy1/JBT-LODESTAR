@@ -6,10 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "tsx --test src/services/*.test.ts",
-    "test:ranking": "tsx --test src/services/ranking-score.test.ts",
-    "typecheck": "tsc --noEmit"
+    "lint": "eslint ."
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
