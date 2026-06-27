@@ -19,6 +19,7 @@ prisma/dev.db-journal
 # Build output
 dist/
 build/
+*.tsbuildinfo
 
 # OS
 .DS_Store
