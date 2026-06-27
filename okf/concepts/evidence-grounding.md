@@ -39,9 +39,9 @@ The `evidence[]` field in `RankingOutputSchema` must list which contact data fie
 If an AI output makes a claim that cannot be traced to a contact field, it is ungrounded.
 
 Examples of ungrounded claims (must be flagged by verification.service.ts):
-- "Sarah is likely an introvert." ← no personality data
-- "Daniel prefers formal communication." ← no stated preference
-- "Mei is probably familiar with agile methods." ← inferred from job title without explicit data
+- "This contact is likely an introvert." ← no personality data
+- "This contact prefers formal communication." ← no stated preference
+- "This contact is probably familiar with agile methods." ← inferred from job title without explicit data
 
 The verification service must add a warning to the `warnings[]` array for each ungrounded claim found.
 
