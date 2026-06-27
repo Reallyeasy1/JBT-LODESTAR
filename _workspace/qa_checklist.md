@@ -108,3 +108,33 @@ Check: Does the output schema include uncertainty language in cultural notes?
 | Date | Issue # | Finding | Severity | Status |
 |------|---------|---------|----------|--------|
 | 2026-06-27 | — | Harness setup — no findings yet | — | — |
+| 2026-06-27 | #11 | Final stacked audit: no LinkedIn scraping/API fetch, no automatic sender dependency/code, no autonomous loop code, `requiresUserReview` is structurally locked to `z.literal(true)`, AI writes are schema-validated, and API routes are scoped with `getCurrentUser()` | — | PASS |
+
+---
+
+## Final Safety Audit — Issue #11
+
+**Audit date:** 2026-06-27  
+**Branch audited:** `codex/issue-11-final-safety-audit` stacked on `codex/issue-12-demo-polish`  
+**Verdict:** PASS
+
+### Required grep checks
+
+| Check | Command | Result |
+|-------|---------|--------|
+| LinkedIn scraping/API usage | `grep -RIn "linkedin" src/` | PASS with allowed matches only: stored `linkedinUrl` fields/tests and identity matching against user-provided URLs. No LinkedIn fetch, API call, scraper, crawler, or external request code. |
+| Automatic send dependencies/code | `grep -RInE "sendMail\|sendgrid\|nodemailer" src/` | PASS — no matches. |
+| Follow-up review invariant | `grep -RIn "requiresUserReview" src/services/followup.service.ts` | PASS — `z.literal(true)` and persisted outputs force `requiresUserReview: true`. |
+| Autonomous loops | `grep -RInE "autonomous\|setInterval\|cron" src/` | PASS — no matches. |
+
+### Additional safety checks
+
+| Check | Result |
+|-------|--------|
+| LinkedIn fetch/scraping patterns (`fetch.*linkedin`, `api.linkedin`, `linkedin.com`, scraper/crawler libraries) | PASS — no matches in `src/`. |
+| Automatic sending patterns (`sgMail.send`, generic mail transports, `mailto:`) | PASS — no matches in `src/`. |
+| Cultural inference/stereotyping | PASS — prompt files explicitly forbid inferring culture, nationality, religion, ethnicity, politics, or preferences from names/company/location; stereotype strings appear only in negative tests and verification rules. |
+| Zod validation before AI Prisma writes | PASS — briefing, ranking, follow-up, and localisation outputs are parsed before/around writes; follow-up additionally validates the review invariant before persistence. |
+| AgentRun coverage | PASS — briefing, ranking, follow-up, and localisation services call `startAgentRun` and `completeAgentRun`. |
+| API auth scoping | PASS — every route in `src/app/api` imports/calls `getCurrentUser()` before user-scoped service operations. |
+| Build/test gate | PASS — `npm test`, `npm run typecheck`, `npm run lint`, `DATABASE_URL='mysql://user:pass@localhost:3306/lodestar' npx prisma validate`, and `DATABASE_URL='mysql://user:pass@localhost:3306/lodestar' npm run build` all exited 0. |
