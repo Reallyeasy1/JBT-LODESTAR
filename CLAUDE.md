@@ -10,6 +10,33 @@ Tagline: *Scan the room. Know who matters. Follow up before the opportunity goes
 
 ---
 
+## Direction
+
+### North Star (product)
+> "I met 40 people at a conference. Which 5 actually matter for what I'm trying to achieve, and what do I do about them?"
+
+Every feature serves this wedge or gets cut. If a proposed feature doesn't help answer that question for the demo user, it is deferred.
+
+### Product direction
+Ship the **demo vertical slice** first:
+`/events/[id]` → Rank → `/contacts/[id]` → Briefing → Localised intro → Note → Follow-up draft
+
+What's deferred until the slice ships: onboarding flow, event creation, manual contact entry, real LLM provider, VCF/QR import, auth (Clerk/Auth.js). What's permanently forbidden: LinkedIn scraping, auto-sending, autonomous agent loops, PostgreSQL.
+
+→ Canonical scope + cut list: **`_workspace/product_scope.md`**
+
+### Project direction (execution)
+- Build in dependency order: schema (#2) gates all services; services gate all pages
+- GitHub Issues are the shared task queue — agents claim `status:ready` issues
+- AI output is always: Zod-validated → verified → saved as draft → user reviews
+- No AI writes to the DB directly; no autonomous background loops
+
+→ Live sprint status: **`_workspace/agent_handoff.md`** ← read this first every session
+→ Build order + service contracts: **`_workspace/technical_plan.md`**
+→ Open work: GitHub Issues with `status:ready` label
+
+---
+
 ## Commands
 
 ```bash
@@ -161,21 +188,37 @@ The demo vertical slice: Dashboard → Rank → Open contact → Briefing → Ad
 
 **Goal:** Coordinate six Claude Code development agents to build Lodestar in parallel using GitHub Issues as the shared task queue.
 
-**Trigger:** For any Lodestar development task involving multiple areas (frontend, data, AI, safety), use the `lodestar-orchestrate` skill. For single-agent tasks, invoke the relevant skill directly:
-- `lodestar-product-planning` — scope, demo script, issue refinement
+**Session start:** Read `_workspace/agent_handoff.md` → check GitHub `status:ready` issues → then begin work.
+
+**Agent teams require:** `export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
+
+### Where things live
+
+| Layer | Path | Holds |
+|-------|------|-------|
+| Who (roles) | `.claude/agents/` | 6 agent definitions: lodestar-orchestrator + 5 specialists |
+| How (procedures) | `.claude/skills/` | One skill per task type — see trigger list below |
+| Launcher | `.claude/commands/sprint.md` | `/sprint` — routes `status:ready` issues to agents in dependency order |
+| State (live) | `_workspace/` | Planning artifacts; file map → `_workspace/README.md` |
+| Knowledge | `okf/` | Durable policy/rubrics (workflows, scoring, safety) — no user data |
+| Task queue | GitHub Issues | Templates in `.github/ISSUE_TEMPLATE/`; labels: status / area / agent / priority / size |
+
+### Skill triggers
+
+For tasks touching multiple areas use `lodestar-orchestrate`. For single-area tasks invoke directly:
+
+- `lodestar-product-planning` — scope decisions, demo script, issue refinement
 - `lodestar-data-backend` — Prisma schema, migrations, seed data
 - `lodestar-fullstack-build` — Next.js pages, components, API routes
 - `lodestar-ai-workflows` — AI services, Zod schemas, OKF files
 - `lodestar-safety-qa` — safety reviews, build checks, contract verification
-- `lodestar-sprint-planning` — guided sprint planning (asks all questions first, then assigns issues)
+- `lodestar-sprint-planning` — guided sprint planning (asks all 10 questions first, then assigns issues)
 - `lodestar-github-workflow` — claim an issue, create a branch, open a PR
 
-**Planning docs:** `_workspace/` — read `agent_handoff.md` first in every session.
+### Change History
 
-**Agent teams require:** `export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
-
-**Change History:**
 | Date | Change | Target | Reason |
 |------|--------|--------|--------|
 | 2026-06-27 | Initial harness setup | All | Bootstrap 6-agent team for parallel development |
-| 2026-06-27 | Add lodestar-sprint-planning skill | .claude/skills/ | Guided sprint planning with upfront Q&A before issue selection |
+| 2026-06-27 | Add lodestar-sprint-planning skill | `.claude/skills/` | Guided sprint planning with upfront Q&A before issue selection |
+| 2026-06-27 | Add Direction section + workflow map | `CLAUDE.md` | Link project/product direction to `.claude/agents/`, skills, `_workspace/` |
