@@ -54,8 +54,9 @@ With filters:
 ```
 /sprint
   │
-  ├── reads _workspace/agent_handoff.md       (what was done last session)
-  ├── checks issues with status:in-progress   (stops if ≥3 already running)
+  ├── git pull origin main                     (sync local main with remote)
+  ├── reads _workspace/agent_handoff.md        (what was done last session)
+  ├── checks issues with status:in-progress    (stops if ≥3 already running)
   ├── fetches all status:ready issues
   │
   ├── picks up to 3 issues in dependency order:
@@ -146,4 +147,5 @@ Run `/sprint` again. It reads `_workspace/agent_handoff.md`, skips anything alre
 | Agent picks the wrong issue | Check the issue has the correct `area:` label |
 | Frontend blocked | Correct — close the `needs-contract` issue first, then re-run `/sprint` |
 | No issues found | Verify issues have `status:ready` label and no assignee |
+| Pull blocked by uncommitted changes | Commit or stash your local work, then re-run `/sprint` |
 | Agent team feature not working | Confirm `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is exported in your shell |
