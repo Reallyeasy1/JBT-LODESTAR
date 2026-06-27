@@ -11,8 +11,6 @@ import {
   Users,
 } from "lucide-react";
 
-const DEMO_EVENT_ID = "cle00000000000000000001";
-
 const workflow = [
   {
     icon: Users,
@@ -75,7 +73,7 @@ export default function Home() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href={`/events/${DEMO_EVENT_ID}`}
+                href="/dashboard"
                 className="inline-flex min-h-14 items-center justify-center gap-2 border border-[#191813] bg-[#d7ff51] px-6 py-4 text-sm font-black shadow-[5px_5px_0_rgba(25,24,19,0.28)] transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_rgba(25,24,19,0.34)]"
               >
                 Start the live demo <ArrowRight size={18} />

@@ -49,6 +49,8 @@ import {
 
 type View = "home" | "contacts" | "capture" | "followups" | "profile";
 
+const DEMO_EVENT_ID = process.env.NEXT_PUBLIC_DEMO_EVENT_ID ?? "cle00000000000000000001";
+
 const navigation = [
   { id: "home" as const, label: "Today", icon: Home },
   { id: "contacts" as const, label: "People", icon: Users },
@@ -237,9 +239,9 @@ function DesktopSidebar({
           );
         })}
       </nav>
-      <div className="sidebar-event">
+      <Link href={`/events/${DEMO_EVENT_ID}`} className="sidebar-event" aria-label={`Open ${event.name}`}>
         <strong>{event.name}</strong>
-      </div>
+      </Link>
       <div className="sidebar-profile">
         <span className="profile-avatar">{profileInitials(profile.displayName)}</span>
         <span>
