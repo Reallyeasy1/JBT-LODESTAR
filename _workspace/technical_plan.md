@@ -75,8 +75,13 @@ generateBriefing(contactId: string, userId: string): Promise<Briefing>
 
 ### followup.service.ts
 ```ts
-generateFollowUp(contactId: string, interactionId: string, userId: string): Promise<FollowUp>
-// Always saves status: "drafted", requiresUserReview: true
+generateFollowUp(params: {
+  contactId: string;
+  userId: string;
+  interactionId?: string;
+  meetingNote?: string;
+}): Promise<{ followUp: FollowUp; output: FollowUpOutput }>
+// Always saves status: "drafted", userApproved: false, requiresUserReview: true
 ```
 
 ### verification.service.ts
@@ -139,8 +144,8 @@ completeAgentRun(agentRunId: string, params: CompleteAgentRunParams): Promise<vo
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 0 | Repo init + harness setup | ✅ Done |
-| 1 | Schema + seed + lib | To start |
-| 2 | Service layer + AI stubs | Blocked by Phase 1 |
-| 3 | API routes | Blocked by Phase 2 |
+| 1 | Schema + seed + lib | ✅ Done via PR #17 |
+| 2 | Service layer + AI stubs | In progress — #4 active, #6/#8 in review via PR #19 |
+| 3 | API routes | Partial — briefing/follow-up routes in PR #19 |
 | 4 | Pages + UI | Blocked by Phase 3 |
 | 5 | Demo polish + QA | Blocked by Phase 4 |
