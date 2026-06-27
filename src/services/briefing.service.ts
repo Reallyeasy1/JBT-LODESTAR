@@ -76,6 +76,16 @@ export async function getLatestBriefingForContact(
   return briefing ? toBriefingDetail(briefing) : null;
 }
 
+export async function getBriefingById(
+  briefingId: string,
+  userId: string,
+): Promise<BriefingDetail | null> {
+  const briefing = await db.briefing.findFirst({
+    where: { id: briefingId, userId },
+  });
+  return briefing ? toBriefingDetail(briefing) : null;
+}
+
 export async function generateBriefing(contactId: string, userId: string): Promise<BriefingOutput> {
   const startedAt = Date.now();
   const agentRunId = await startAgentRun({
