@@ -1525,6 +1525,95 @@ label:has(input:focus-visible) {
   line-height: 1.5;
 }
 
+.profile-ingest-section {
+  display: grid;
+  gap: 13px;
+}
+
+.profile-source-grid,
+.profile-draft-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-source-upload {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  padding: 13px;
+  cursor: pointer;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: #fffdf7;
+}
+
+.profile-source-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.profile-source-upload strong,
+.profile-source-upload small {
+  display: block;
+}
+
+.profile-source-upload small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.profile-source-field,
+.profile-draft-grid label,
+.profile-draft-field {
+  display: grid;
+  gap: 7px;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.profile-source-field input,
+.profile-source-field textarea,
+.profile-draft-grid input,
+.profile-draft-field textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: #fffdf7;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
+}
+
+.profile-source-field input,
+.profile-draft-grid input {
+  height: 43px;
+  padding: 0 12px;
+}
+
+.profile-source-field textarea,
+.profile-draft-field textarea {
+  padding: 11px 12px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.profile-draft-card {
+  display: grid;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper-2);
+}
+
 .goal-field {
   display: flex;
   align-items: flex-start;
@@ -1951,6 +2040,11 @@ label:has(input:focus-visible) {
   .view-stack {
     padding-right: 28px;
     padding-left: 28px;
+  }
+
+  .profile-source-grid,
+  .profile-draft-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .mobile-header {
@@ -2425,6 +2519,154 @@ label:has(input:focus-visible) {
     padding-right: 22px;
     padding-left: 22px;
   }
+}
+
+.brand-name {
+  font-size: 22px;
+}
+
+.mobile-header-title,
+.desktop-nav-item,
+.sheet-header {
+  font-size: 14px;
+}
+
+.eyebrow,
+.event-date-tile span,
+.metrics-strip span,
+.rank-pill,
+.confidence-label,
+.opportunity-pill,
+.profile-completion,
+.reason-block span,
+.next-action-row span,
+.suggestion-label,
+.list-summary,
+.followup-summary span,
+.settings-section > p,
+.draft-safety,
+.briefing-confidence,
+.evidence-card-heading small,
+.language-tabs button,
+.privacy-note,
+.toast {
+  font-size: 12px;
+}
+
+.mobile-greeting p,
+.page-title-row p,
+.desktop-page-header p,
+.event-context-copy > span:last-child,
+.priority-person p,
+.briefing-person p,
+.reason-block p,
+.next-action-row strong,
+.primary-button,
+.secondary-button,
+.text-button,
+.compact-contact-main strong,
+.quick-action strong,
+.search-field input,
+.segmented-control button,
+.ranked-contact-main > span:nth-child(2),
+.ranked-contact-main em,
+.empty-state span,
+.camera-card p,
+.capture-option strong,
+.followup-item-main strong,
+.settings-list button strong,
+.manual-form input,
+.manual-form textarea,
+.draft-editor textarea,
+.goal-field textarea,
+.profile-source-field input,
+.profile-source-field textarea,
+.profile-draft-grid input,
+.profile-draft-field textarea,
+.briefing-section p,
+.localise-card > p {
+  font-size: 14px;
+}
+
+.event-context-copy strong,
+.priority-person h3,
+.briefing-person h2,
+.compact-contact-main > span,
+.quick-action small,
+.capture-option small,
+.settings-list button small,
+.followup-item-main > span:last-child,
+.profile-hero p,
+.profile-source-upload small,
+.profile-source-field,
+.profile-draft-grid label,
+.profile-draft-field,
+.briefing-section li,
+.evidence-card-heading > span,
+.evidence-card li,
+.cultural-note p,
+.rail-goal-card p,
+.pulse-item strong,
+.trust-card strong {
+  font-size: 13px;
+}
+
+.compact-contact-main small,
+.ranked-contact-main small,
+.followup-item-main small,
+.cultural-note strong,
+.rail-card .secondary-button,
+.trust-card p,
+.sidebar-event > span:last-child,
+.sidebar-profile small,
+.nav-count {
+  font-size: 11px;
+}
+
+.section-heading h2,
+.camera-card h2,
+.manual-form h2,
+.draft-editor h2,
+.settings-section h2 {
+  font-size: 26px;
+}
+
+.metrics-strip strong {
+  font-size: 28px;
+}
+
+.ranked-contact-title strong {
+  font-size: 17px;
+}
+
+.ranked-contact-score strong {
+  font-size: 21px;
+}
+
+.ranked-contact-score small {
+  font-size: 9px;
+}
+
+.followup-summary strong {
+  font-size: 22px;
+}
+
+.profile-hero h1 {
+  font-size: 30px;
+}
+
+.profile-avatar,
+.avatar {
+  font-size: 15px;
+}
+
+.profile-avatar-large {
+  font-size: 21px;
+}
+
+.sidebar-event strong,
+.sidebar-profile strong {
+  font-size: 13px;
 }
 
 @media (prefers-reduced-motion: reduce) {

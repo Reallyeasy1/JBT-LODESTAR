@@ -32,7 +32,6 @@ import {
   Send,
   ShieldCheck,
   SlidersHorizontal,
-  Sparkles,
   Target,
   Trash2,
   TrendingUp,
@@ -62,6 +61,112 @@ const navigation = [
   },
   { id: "profile" as const, label: "Profile", icon: UserRound },
 ];
+
+type FollowUpDraft = (typeof followUps)[number];
+
+type ProfileState = {
+  displayName: string;
+  title: string;
+  company: string;
+  bio: string;
+  websiteUrl: string;
+  linkedinUrl: string;
+  networkingGoal: string;
+  languages: string;
+  tone: string;
+};
+
+type ProfileDraft = ProfileState & {
+  warnings: string[];
+};
+
+const initialProfile: ProfileState = {
+  displayName: "Kee Zhen Xian",
+  title: "Founder",
+  company: "Lodestar",
+  bio: "Building Lodestar for event networking follow-through.",
+  websiteUrl: "",
+  linkedinUrl: "",
+  networkingGoal: event.goal,
+  languages: "English",
+  tone: "Concise and warm",
+};
+
+function profileInitials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "ME";
+}
+
+function buildProfileDraft({
+  currentProfile,
+  sourceText,
+  sourceUrl,
+  fileName,
+}: {
+  currentProfile: ProfileState;
+  sourceText: string;
+  sourceUrl: string;
+  fileName: string;
+}): ProfileDraft {
+  const warnings: string[] = [];
+  const text = sourceText.replace(/\s+/g, " ").trim();
+  const lines = sourceText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const url = sourceUrl.trim();
+  const isLinkedIn = /linkedin\.com\/(in|pub)\//i.test(url);
+  const websiteUrl = url && !isLinkedIn ? url : currentProfile.websiteUrl;
+  const linkedinUrl = isLinkedIn ? url : currentProfile.linkedinUrl;
+  const likelyName = lines.find((line) =>
+    /^[A-Z][A-Za-z .'-]+$/.test(line) &&
+    line.split(/\s+/).length >= 2 &&
+    line.split(/\s+/).length <= 5,
+  );
+  const likelyTitleLine = lines.find((line) =>
+    /\b(founder|engineer|developer|designer|product|manager|director|lead|consultant|student|researcher)\b/i.test(line),
+  );
+  const likelyCompany = likelyTitleLine?.match(/\bat\s+(.+)$/i)?.[1]
+    ?? lines.find((line) => /\b(inc|labs|studio|ventures|capital|university|group|systems|ai)\b/i.test(line));
+  const languageMatches = Array.from(
+    text.matchAll(/\b(English|Mandarin|Chinese|Malay|Bahasa|Tamil|Japanese|Korean|French|Spanish|German)\b/gi),
+  ).map((match) => match[1]);
+  const goalLine = lines.find((line) =>
+    /\b(goal|seeking|looking for|interested in|want to|building|fundraising|pilot|partner|collaborat)/i.test(line),
+  );
+
+  if (fileName.toLowerCase().endsWith(".pdf")) {
+    warnings.push("PDF text extraction is best-effort in this browser. Review every field before applying.");
+  }
+
+  if (isLinkedIn) {
+    warnings.push("LinkedIn URL was stored from your input. Lodestar did not scrape LinkedIn.");
+  }
+
+  if (url && !isLinkedIn && !/^https?:\/\//i.test(url)) {
+    warnings.push("Website links should include https:// for production use.");
+  }
+
+  return {
+    displayName: likelyName ?? currentProfile.displayName,
+    title: likelyTitleLine?.replace(/\s+at\s+.+$/i, "") ?? currentProfile.title,
+    company: likelyCompany ?? currentProfile.company,
+    bio: text ? text.slice(0, 360) : currentProfile.bio,
+    websiteUrl,
+    linkedinUrl,
+    networkingGoal: goalLine ?? currentProfile.networkingGoal,
+    languages: languageMatches.length > 0
+      ? Array.from(new Set(languageMatches.map((item) => item[0].toUpperCase() + item.slice(1).toLowerCase()))).join(", ")
+      : currentProfile.languages,
+    tone: currentProfile.tone,
+    warnings,
+  };
+}
 
 function Logo({ compact = false }: { compact?: boolean }) {
   return (
@@ -104,7 +209,15 @@ function ShellHeader({ title }: { title: string }) {
   );
 }
 
-function DesktopSidebar({ view, onNavigate }: { view: View; onNavigate: (view: View) => void }) {
+function DesktopSidebar({
+  profile,
+  view,
+  onNavigate,
+}: {
+  profile: ProfileState;
+  view: View;
+  onNavigate: (view: View) => void;
+}) {
   return (
     <aside className="desktop-sidebar">
       <Logo />
@@ -125,15 +238,13 @@ function DesktopSidebar({ view, onNavigate }: { view: View; onNavigate: (view: V
         })}
       </nav>
       <div className="sidebar-event">
-        <span className="eyebrow">Active event</span>
         <strong>{event.name}</strong>
-        <span>{event.date} · {event.venue}</span>
       </div>
       <div className="sidebar-profile">
-        <span className="profile-avatar">KX</span>
+        <span className="profile-avatar">{profileInitials(profile.displayName)}</span>
         <span>
-          <strong>Kee Zhen Xian</strong>
-          <small>Founder · Lodestar</small>
+          <strong>{profile.displayName}</strong>
+          <small>{profile.title} · {profile.company}</small>
         </span>
         <ChevronRight size={16} />
       </div>
@@ -173,7 +284,6 @@ function EventContext() {
         <strong>27</strong>
       </div>
       <div className="event-context-copy">
-        <span className="eyebrow">Active event</span>
         <strong>{event.name}</strong>
         <span><MapPin size={13} /> {event.venue}</span>
       </div>
@@ -187,10 +297,6 @@ function EventContext() {
 function PriorityContact({ contact, onOpen }: { contact: Contact; onOpen: () => void }) {
   return (
     <article className="priority-card">
-      <div className="priority-card-topline">
-        <span className="rank-pill"><Sparkles size={13} /> Top opportunity</span>
-        <span className="confidence-label">High confidence</span>
-      </div>
       <div className="priority-person">
         <Avatar contact={contact} size="large" />
         <div>
@@ -201,13 +307,11 @@ function PriorityContact({ contact, onOpen }: { contact: Contact; onOpen: () => 
         <ScoreRing score={contact.score} />
       </div>
       <div className="reason-block">
-        <span>Why now</span>
         <p>{contact.reason}</p>
       </div>
       <div className="next-action-row">
         <span className="next-action-icon"><ArrowRight size={16} /></span>
         <div>
-          <span>Recommended next action</span>
           <strong>{contact.nextAction}</strong>
         </div>
       </div>
@@ -249,9 +353,7 @@ function Dashboard({
       <ShellHeader title="Today" />
       <div className="desktop-page-header">
         <div>
-          <span className="eyebrow">Saturday, 27 June</span>
           <h1>Good afternoon, Kee.</h1>
-          <p>Your event has <strong>three next actions</strong> worth moving today.</p>
         </div>
         <div className="desktop-header-actions">
           <button className="icon-button" aria-label="Notifications"><Bell size={19} /></button>
@@ -264,9 +366,7 @@ function Dashboard({
       <EventContext />
 
       <section className="mobile-greeting">
-        <span className="eyebrow">Your next move</span>
         <h1>Know who matters<br />before the moment cools.</h1>
-        <p>Three people are ready for a meaningful follow-up.</p>
       </section>
 
       <section className="metrics-strip" aria-label="Event summary">
@@ -278,7 +378,6 @@ function Dashboard({
       <section className="section-block">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">Ranked for your goal</span>
             <h2>Best next move</h2>
           </div>
           <button className="text-button" onClick={() => onNavigate("contacts")}>See all</button>
@@ -289,7 +388,6 @@ function Dashboard({
       <section className="section-block">
         <div className="section-heading compact-heading">
           <div>
-            <span className="eyebrow">Priority queue</span>
             <h2>Keep momentum</h2>
           </div>
           <span className="section-count">4 people</span>
@@ -304,7 +402,6 @@ function Dashboard({
       <section className="quick-actions-section">
         <div className="section-heading compact-heading">
           <div>
-            <span className="eyebrow">At the event</span>
             <h2>Capture context fast</h2>
           </div>
         </div>
@@ -352,9 +449,7 @@ function ContactsView({
       <ShellHeader title="People" />
       <div className="page-title-row">
         <div>
-          <span className="eyebrow">Relationship map</span>
           <h1>People</h1>
-          <p>Ranked against your current event goal.</p>
         </div>
         <Link className="round-add-button" href="/contacts/create" aria-label="Add contact">
           <Plus size={21} />
@@ -381,7 +476,6 @@ function ContactsView({
       </div>
       <div className="list-summary">
         <span>{filtered.length} people</span>
-        <span><TrendingUp size={14} /> Goal-weighted ranking</span>
       </div>
       <div className="ranked-contact-list">
         {filtered.map((contact, index) => (
@@ -534,9 +628,7 @@ function CaptureView({ onAdd }: { onAdd: (contact: Contact) => void }) {
       <ShellHeader title="Capture" />
       <div className="page-title-row">
         <div>
-          <span className="eyebrow">In the moment</span>
           <h1>Capture contact</h1>
-          <p>Save the person and the context while it is fresh.</p>
         </div>
       </div>
       <div className="segmented-control capture-tabs" role="group" aria-label="Capture method">
@@ -565,13 +657,7 @@ function CaptureView({ onAdd }: { onAdd: (contact: Contact) => void }) {
                 <Camera size={40} aria-hidden="true" />
               )}
             </div>
-            <span className="eyebrow">Business card</span>
             <h2>Point, capture, confirm.</h2>
-            <p>
-              {cameraStatus === "ready"
-                ? "Webcam is active. Hold the card inside the frame."
-                : "We’ll extract fields and flag anything uncertain before saving."}
-            </p>
             {cameraStatus === "error" && <p className="camera-error">{cameraError}</p>}
             <button
               type="button"
@@ -600,19 +686,19 @@ function CaptureView({ onAdd }: { onAdd: (contact: Contact) => void }) {
           <div className="capture-options">
             <label className="capture-option">
               <span className="capture-option-icon"><QrCode size={21} /></span>
-              <span><strong>Scan QR code</strong><small>Contact card or event badge</small></span>
+              <span><strong>Scan QR code</strong></span>
               <ChevronRight size={18} />
               <input type="file" accept="image/*" capture="environment" aria-label="Scan QR code" />
             </label>
             <label className="capture-option">
               <span className="capture-option-icon"><FileUp size={21} /></span>
-              <span><strong>Import contact file</strong><small>.vcf and contact cards</small></span>
+              <span><strong>Import contact file</strong></span>
               <ChevronRight size={18} />
               <input type="file" accept=".vcf,text/vcard" aria-label="Import VCF contact file" />
             </label>
             <button className="capture-option" onClick={() => setMode("manual")}>
               <span className="capture-option-icon"><PenLine size={21} /></span>
-              <span><strong>Paste profile details</strong><small>LinkedIn text or event bio</small></span>
+              <span><strong>Paste profile details</strong></span>
               <ChevronRight size={18} />
             </button>
           </div>
@@ -621,7 +707,7 @@ function CaptureView({ onAdd }: { onAdd: (contact: Contact) => void }) {
         <form className="manual-form" onSubmit={submitManual}>
           <div className="form-intro">
             <span className="form-icon"><PenLine size={22} /></span>
-            <div><h2>Add the essentials</h2><p>You can enrich and rank this contact later.</p></div>
+            <div><h2>Add the essentials</h2></div>
           </div>
           <label>
             Full name <span>Required</span>
@@ -651,11 +737,58 @@ function CaptureView({ onAdd }: { onAdd: (contact: Contact) => void }) {
   );
 }
 
-function FollowupsView({ onOpenContact, onToast }: { onOpenContact: (id: string) => void; onToast: (message: string) => void }) {
-  const [selected, setSelected] = useState(followUps[0].id);
-  const [drafts, setDrafts] = useState(() => Object.fromEntries(followUps.map((item) => [item.id, item.draft])));
+function FollowupsView({
+  followUpDrafts,
+  selectedDraftId,
+  onOpenContact,
+  onToast,
+}: {
+  followUpDrafts: FollowUpDraft[];
+  selectedDraftId: string;
+  onOpenContact: (id: string) => void;
+  onToast: (message: string) => void;
+}) {
+  const [selected, setSelected] = useState(followUpDrafts[0]?.id ?? "");
+  const [drafts, setDrafts] = useState<Record<string, string>>(() =>
+    Object.fromEntries(followUpDrafts.map((item) => [item.id, item.draft])),
+  );
   const [approved, setApproved] = useState<string[]>([]);
-  const active = followUps.find((item) => item.id === selected) ?? followUps[0];
+  const active = followUpDrafts.find((item) => item.id === selected) ?? followUpDrafts[0];
+
+  useEffect(() => {
+    setDrafts((current) => {
+      const next = { ...current };
+      for (const item of followUpDrafts) {
+        if (!(item.id in next)) {
+          next[item.id] = item.draft;
+        }
+      }
+      return next;
+    });
+
+    if (!selected || !followUpDrafts.some((item) => item.id === selected)) {
+      setSelected(followUpDrafts[0]?.id ?? "");
+    }
+  }, [followUpDrafts, selected]);
+
+  useEffect(() => {
+    if (selectedDraftId && followUpDrafts.some((item) => item.id === selectedDraftId)) {
+      setSelected(selectedDraftId);
+    }
+  }, [followUpDrafts, selectedDraftId]);
+
+  if (!active) {
+    return (
+      <div className="view-stack standard-view followups-view">
+        <ShellHeader title="Follow-ups" />
+        <div className="empty-state">
+          <MessageSquareText size={24} />
+          <strong>No drafts yet</strong>
+          <span>Open a contact briefing and draft a follow-up.</span>
+        </div>
+      </div>
+    );
+  }
 
   async function copyDraft() {
     await navigator.clipboard?.writeText(drafts[active.id]);
@@ -672,20 +805,18 @@ function FollowupsView({ onOpenContact, onToast }: { onOpenContact: (id: string)
       <ShellHeader title="Follow-ups" />
       <div className="page-title-row">
         <div>
-          <span className="eyebrow">Keep momentum</span>
           <h1>Follow-ups</h1>
-          <p>Review every draft before anything leaves Lodestar.</p>
         </div>
       </div>
       <div className="followup-summary">
-        <div><Clock3 size={19} /><span><strong>2</strong> due soon</span></div>
+        <div><Clock3 size={19} /><span><strong>{followUpDrafts.length}</strong> drafts</span></div>
         <div><CircleCheck size={19} /><span><strong>{approved.length}</strong> approved</span></div>
       </div>
       <section className="followup-list">
         <div className="section-heading compact-heading">
-          <div><span className="eyebrow">Review queue</span><h2>Drafts to finish</h2></div>
+          <div><h2>Drafts to finish</h2></div>
         </div>
-        {followUps.map((item) => (
+        {followUpDrafts.map((item) => (
           <button key={item.id} className={selected === item.id ? "followup-item active" : "followup-item"} onClick={() => setSelected(item.id)}>
             <span className={`followup-channel channel-${item.channel.toLowerCase()}`}>
               {item.channel === "Email" ? <Mail size={18} /> : item.channel === "LinkedIn" ? <MessageSquareText size={18} /> : <Send size={18} />}
@@ -701,7 +832,6 @@ function FollowupsView({ onOpenContact, onToast }: { onOpenContact: (id: string)
       <section className="draft-editor">
         <div className="draft-editor-header">
           <div>
-            <span className="eyebrow">{active.channel} draft</span>
             <h2>Message for {active.name}</h2>
           </div>
           <button className="icon-button" onClick={() => onOpenContact(active.contactId)} aria-label={`Open ${active.name}'s briefing`}><Lightbulb size={18} /></button>
@@ -724,36 +854,148 @@ function FollowupsView({ onOpenContact, onToast }: { onOpenContact: (id: string)
   );
 }
 
-function ProfileView({ onToast }: { onToast: (message: string) => void }) {
-  const [goal, setGoal] = useState(event.goal);
+function ProfileView({
+  profile,
+  onProfileChange,
+  onToast,
+}: {
+  profile: ProfileState;
+  onProfileChange: (profile: ProfileState) => void;
+  onToast: (message: string) => void;
+}) {
+  const [sourceText, setSourceText] = useState("");
+  const [sourceUrl, setSourceUrl] = useState(profile.linkedinUrl || profile.websiteUrl);
+  const [fileName, setFileName] = useState("");
+  const [draft, setDraft] = useState<ProfileDraft | null>(null);
+
+  async function handleSourceFile(file: File | undefined) {
+    if (!file) return;
+    setFileName(file.name);
+    setSourceText(await file.text());
+  }
+
+  function generateDraft() {
+    const nextDraft = buildProfileDraft({
+      currentProfile: profile,
+      sourceText,
+      sourceUrl,
+      fileName,
+    });
+    setDraft(nextDraft);
+    onToast("Profile draft ready for review");
+  }
+
+  function applyDraft() {
+    if (!draft) return;
+    onProfileChange({
+      displayName: draft.displayName,
+      title: draft.title,
+      company: draft.company,
+      bio: draft.bio,
+      websiteUrl: draft.websiteUrl,
+      linkedinUrl: draft.linkedinUrl,
+      networkingGoal: draft.networkingGoal,
+      languages: draft.languages,
+      tone: draft.tone,
+    });
+    setDraft(null);
+    onToast("Profile updated locally");
+  }
+
+  function updateProfile(field: keyof ProfileState, value: string) {
+    onProfileChange({ ...profile, [field]: value });
+  }
+
   return (
     <div className="view-stack standard-view profile-view">
       <ShellHeader title="Profile" />
       <div className="profile-hero">
-        <span className="profile-avatar profile-avatar-large">KX</span>
-        <h1>Kee Zhen Xian</h1>
-        <p>Founder · Lodestar</p>
-        <span className="profile-completion"><CircleCheck size={15} /> Profile ready for ranking</span>
+        <span className="profile-avatar profile-avatar-large">{profileInitials(profile.displayName)}</span>
+        <h1>{profile.displayName}</h1>
+        <p>{profile.title} · {profile.company}</p>
       </div>
+
+      <section className="settings-section profile-ingest-section">
+        <h2>Resume, website, or LinkedIn</h2>
+        <div className="profile-source-grid">
+          <label className="profile-source-upload">
+            <FileUp size={20} />
+            <span><strong>{fileName || "Upload resume/CV"}</strong><small>PDF, TXT, or Markdown</small></span>
+            <input
+              type="file"
+              accept=".pdf,.txt,.md,text/plain,application/pdf"
+              onChange={(eventValue) => void handleSourceFile(eventValue.target.files?.[0])}
+            />
+          </label>
+          <label className="profile-source-field">
+            Personal site or LinkedIn
+            <input
+              value={sourceUrl}
+              onChange={(eventValue) => setSourceUrl(eventValue.target.value)}
+              placeholder="https://..."
+            />
+          </label>
+        </div>
+        <label className="profile-source-field">
+          Paste resume, bio, or profile text
+          <textarea
+            value={sourceText}
+            onChange={(eventValue) => setSourceText(eventValue.target.value)}
+            rows={5}
+            placeholder="Paste your profile, CV text, goals, preferred roles, languages, or what you are looking for."
+          />
+        </label>
+        <button className="primary-button full-width" onClick={generateDraft}>
+          Generate profile draft <ArrowRight size={17} />
+        </button>
+        {draft && (
+          <div className="profile-draft-card">
+            <div className="section-heading compact-heading">
+              <div><h2>Review draft</h2></div>
+            </div>
+            <div className="profile-draft-grid">
+              <label>Display name<input value={draft.displayName} onChange={(eventValue) => setDraft({ ...draft, displayName: eventValue.target.value })} /></label>
+              <label>Role<input value={draft.title} onChange={(eventValue) => setDraft({ ...draft, title: eventValue.target.value })} /></label>
+              <label>Company<input value={draft.company} onChange={(eventValue) => setDraft({ ...draft, company: eventValue.target.value })} /></label>
+              <label>Languages<input value={draft.languages} onChange={(eventValue) => setDraft({ ...draft, languages: eventValue.target.value })} /></label>
+              <label>Website<input value={draft.websiteUrl} onChange={(eventValue) => setDraft({ ...draft, websiteUrl: eventValue.target.value })} /></label>
+              <label>LinkedIn<input value={draft.linkedinUrl} onChange={(eventValue) => setDraft({ ...draft, linkedinUrl: eventValue.target.value })} /></label>
+            </div>
+            <label className="profile-draft-field">Networking goal<textarea value={draft.networkingGoal} onChange={(eventValue) => setDraft({ ...draft, networkingGoal: eventValue.target.value })} rows={3} /></label>
+            <label className="profile-draft-field">Bio<textarea value={draft.bio} onChange={(eventValue) => setDraft({ ...draft, bio: eventValue.target.value })} rows={4} /></label>
+            {draft.warnings.length > 0 && (
+              <div className="draft-safety">
+                <ShieldCheck size={15} />
+                <span>{draft.warnings.join(" ")}</span>
+              </div>
+            )}
+            <button className="primary-button full-width" onClick={applyDraft}>
+              Apply to profile <Check size={17} />
+            </button>
+          </div>
+        )}
+      </section>
+
       <section className="settings-section">
-        <span className="eyebrow">Current lens</span>
         <h2>Networking goal</h2>
-        <p>Lodestar uses this goal to rank every contact and explain why they matter.</p>
         <label className="goal-field">
           <Target size={19} />
-          <textarea value={goal} onChange={(eventValue) => setGoal(eventValue.target.value)} rows={3} />
+          <textarea
+            value={profile.networkingGoal}
+            onChange={(eventValue) => updateProfile("networkingGoal", eventValue.target.value)}
+            rows={3}
+          />
         </label>
         <button className="primary-button full-width" onClick={() => onToast("Networking goal updated locally")}>
           Save goal <Check size={17} />
         </button>
       </section>
       <section className="settings-section settings-list">
-        <span className="eyebrow">Preferences & data</span>
-        <button><Languages size={19} /><span><strong>Language & tone</strong><small>English · Concise and warm</small></span><ChevronRight size={17} /></button>
-        <button><ShieldCheck size={19} /><span><strong>Privacy controls</strong><small>Review retention and AI settings</small></span><ChevronRight size={17} /></button>
-        <button><Database size={19} /><span><strong>Relationship memory</strong><small>See what Lodestar remembers</small></span><ChevronRight size={17} /></button>
-        <button><Download size={19} /><span><strong>Export my data</strong><small>Contacts, events, notes, and drafts</small></span><ChevronRight size={17} /></button>
-        <button className="danger-row"><Trash2 size={19} /><span><strong>Delete account data</strong><small>Permanent and auditable</small></span><ChevronRight size={17} /></button>
+        <button><Languages size={19} /><span><strong>Language & tone</strong></span><ChevronRight size={17} /></button>
+        <button><ShieldCheck size={19} /><span><strong>Privacy controls</strong></span><ChevronRight size={17} /></button>
+        <button><Database size={19} /><span><strong>Relationship memory</strong></span><ChevronRight size={17} /></button>
+        <button><Download size={19} /><span><strong>Export my data</strong></span><ChevronRight size={17} /></button>
+        <button className="danger-row"><Trash2 size={19} /><span><strong>Delete account data</strong></span><ChevronRight size={17} /></button>
       </section>
     </div>
   );
@@ -762,29 +1004,32 @@ function ProfileView({ onToast }: { onToast: (message: string) => void }) {
 function InsightRail({ onNavigate }: { onNavigate: (view: View) => void }) {
   return (
     <aside className="insight-rail">
-      <section className="rail-card rail-goal-card">
-        <span className="rail-icon"><Target size={18} /></span>
-        <span className="eyebrow">Ranking goal</span>
-        <h3>Find high-signal opportunities</h3>
-        <p>{event.goal}</p>
-        <button className="text-button" onClick={() => onNavigate("profile")}>Adjust goal <ChevronRight size={15} /></button>
-      </section>
       <section className="rail-card">
-        <div className="rail-card-heading"><span className="eyebrow">Today’s pulse</span><CalendarDays size={17} /></div>
-        <div className="pulse-item"><span className="pulse-dot urgent" /><div><strong>2 drafts due</strong><small>Sarah and Marcus</small></div></div>
-        <div className="pulse-item"><span className="pulse-dot" /><div><strong>1 contact incomplete</strong><small>Add an interaction note</small></div></div>
-        <div className="pulse-item"><span className="pulse-dot quiet" /><div><strong>5 ranked contacts</strong><small>Evidence checked</small></div></div>
+        <div className="rail-card-heading"><CalendarDays size={17} /></div>
+        <div className="pulse-item"><span className="pulse-dot urgent" /><div><strong>2 drafts due</strong></div></div>
+        <div className="pulse-item"><span className="pulse-dot" /><div><strong>1 contact incomplete</strong></div></div>
+        <div className="pulse-item"><span className="pulse-dot quiet" /><div><strong>5 ranked contacts</strong></div></div>
         <button className="secondary-button full-width" onClick={() => onNavigate("followups")}>Open follow-ups</button>
       </section>
       <section className="rail-card trust-card">
         <ShieldCheck size={20} />
-        <div><strong>You stay in control</strong><p>Lodestar drafts and recommends. It never sends without you.</p></div>
+        <div><strong>You stay in control</strong></div>
       </section>
     </aside>
   );
 }
 
-function BriefingSheet({ contact, onClose, onToast }: { contact: Contact; onClose: () => void; onToast: (message: string) => void }) {
+function BriefingSheet({
+  contact,
+  onClose,
+  onDraftFollowUp,
+  onToast,
+}: {
+  contact: Contact;
+  onClose: () => void;
+  onDraftFollowUp: (contact: Contact) => void;
+  onToast: (message: string) => void;
+}) {
   const [language, setLanguage] = useState("English");
   const sheetRef = useRef<HTMLElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -869,16 +1114,15 @@ function BriefingSheet({ contact, onClose, onToast }: { contact: Contact; onClos
         <div className="briefing-confidence"><ShieldCheck size={15} /><strong>Evidence-checked briefing</strong><span>High confidence</span></div>
         <section className="briefing-section why-section">
           <span className="briefing-section-icon"><TrendingUp size={18} /></span>
-          <div><span className="eyebrow">Why they matter</span><p>{contact.reason}</p></div>
+          <div><p>{contact.reason}</p></div>
         </section>
         <section className="briefing-section">
           <span className="briefing-section-icon"><Lightbulb size={18} /></span>
-          <div><span className="eyebrow">Suggested opener</span><p className="quote-text">“{contact.opener}”</p><span className="suggestion-label">AI suggestion · Review before using</span></div>
+          <div><p className="quote-text">“{contact.opener}”</p></div>
         </section>
         <section className="briefing-section">
           <span className="briefing-section-icon"><MessageCircleQuestion size={18} /></span>
           <div className="full-section-content">
-            <span className="eyebrow">Questions worth asking</span>
             <ol>{contact.questions.map((question) => <li key={question}>{question}</li>)}</ol>
           </div>
         </section>
@@ -890,7 +1134,7 @@ function BriefingSheet({ contact, onClose, onToast }: { contact: Contact; onClos
           <section className="cultural-note"><Languages size={18} /><div><strong>Language & tone</strong><p>{contact.culturalNote}</p></div></section>
         )}
         <section className="localise-card">
-          <div className="localise-header"><div><span className="eyebrow">Your quick intro</span><h3>Say it naturally</h3></div><Languages size={19} /></div>
+          <div className="localise-header"><div><h3>Say it naturally</h3></div><Languages size={19} /></div>
           <div className="language-tabs">
             {["English", "Mandarin", "Bahasa"].map((item) => <button key={item} className={language === item ? "active" : ""} onClick={() => setLanguage(item)}>{item}</button>)}
           </div>
@@ -899,7 +1143,7 @@ function BriefingSheet({ contact, onClose, onToast }: { contact: Contact; onClos
         </section>
         <div className="sheet-actions">
           <button className="secondary-button"><PenLine size={17} /> Add meeting note</button>
-          <button className="primary-button" onClick={() => onToast("Follow-up draft queued for review")}>Draft follow-up <ArrowRight size={17} /></button>
+          <button className="primary-button" onClick={() => onDraftFollowUp(contact)}>Draft follow-up <ArrowRight size={17} /></button>
         </div>
       </section>
     </div>
@@ -909,6 +1153,9 @@ function BriefingSheet({ contact, onClose, onToast }: { contact: Contact; onClos
 export function LodestarApp() {
   const [view, setView] = useState<View>("home");
   const [contacts, setContacts] = useState<Contact[]>(demoContacts);
+  const [followUpDrafts, setFollowUpDrafts] = useState<FollowUpDraft[]>(followUps);
+  const [selectedDraftId, setSelectedDraftId] = useState(followUps[0]?.id ?? "");
+  const [profile, setProfile] = useState<ProfileState>(initialProfile);
   const [activeContact, setActiveContact] = useState<Contact | null>(null);
   const [toast, setToast] = useState("");
   const toastTimerRef = useRef<number | null>(null);
@@ -948,6 +1195,31 @@ export function LodestarApp() {
     if (contact) setActiveContact(contact);
   }
 
+  function draftFollowUp(contact: Contact) {
+    const draft: FollowUpDraft = {
+      id: `draft-${contact.id}`,
+      contactId: contact.id,
+      name: contact.name,
+      company: contact.company,
+      due: "Today",
+      channel: "Email",
+      draft: `${contact.name.split(" ")[0]}, ${contact.opener} ${contact.nextAction}`,
+    };
+
+    setFollowUpDrafts((current) => {
+      const existingIndex = current.findIndex((item) => item.contactId === contact.id);
+      if (existingIndex === -1) {
+        return [draft, ...current];
+      }
+
+      return current.map((item, index) => index === existingIndex ? draft : item);
+    });
+    setSelectedDraftId(draft.id);
+    setActiveContact(null);
+    setView("followups");
+    showToast(`Follow-up draft added for ${contact.name}`);
+  }
+
   const page = view === "home"
     ? <Dashboard contacts={contacts} onOpenContact={setActiveContact} onNavigate={setView} />
     : view === "contacts"
@@ -955,18 +1227,32 @@ export function LodestarApp() {
       : view === "capture"
         ? <CaptureView onAdd={addContact} />
         : view === "followups"
-          ? <FollowupsView onOpenContact={openContactById} onToast={showToast} />
-          : <ProfileView onToast={showToast} />;
+          ? (
+              <FollowupsView
+                followUpDrafts={followUpDrafts}
+                selectedDraftId={selectedDraftId}
+                onOpenContact={openContactById}
+                onToast={showToast}
+              />
+            )
+          : <ProfileView profile={profile} onProfileChange={setProfile} onToast={showToast} />;
 
   return (
     <div className="app-shell">
-      <DesktopSidebar view={view} onNavigate={setView} />
+      <DesktopSidebar profile={profile} view={view} onNavigate={setView} />
       <main className={view === "home" ? "app-main" : "app-main app-main-wide"}>
         <div className="primary-content">{page}</div>
         {view === "home" && <InsightRail onNavigate={setView} />}
       </main>
       <MobileNav view={view} onNavigate={setView} />
-      {activeContact && <BriefingSheet contact={activeContact} onClose={() => setActiveContact(null)} onToast={showToast} />}
+      {activeContact && (
+        <BriefingSheet
+          contact={activeContact}
+          onClose={() => setActiveContact(null)}
+          onDraftFollowUp={draftFollowUp}
+          onToast={showToast}
+        />
+      )}
       {toast && <div className="toast" role="status"><Check size={17} /> {toast}</div>}
     </div>
   );
