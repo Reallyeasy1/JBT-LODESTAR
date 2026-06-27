@@ -1,8 +1,128 @@
 import { Prisma } from "@prisma/client";
-import { RankingOutput, RankingOutputSchema } from "@/ai/schemas/ranking.schema";
+import {
+  ContactScoreBreakdown,
+  ContactScoreBreakdownSchema,
+  RankingOutput,
+  RankingOutputSchema,
+} from "@/ai/schemas/ranking.schema";
 import { db } from "@/lib/db";
 import { completeAgentRun, startAgentRun } from "@/services/agent-run.service";
 import { rankContactRecords } from "@/services/ranking-score";
+
+export type RankingDetailItem = {
+  id: string;
+  contactId: string;
+  rankPosition: number;
+  score: number | null;
+  opportunityType: string | null;
+  reasoning: string | null;
+  nextAction: string | null;
+  confidence: number | null;
+  evidence: string[];
+  scoreBreakdown: ContactScoreBreakdown | null;
+  contact: {
+    id: string;
+    fullName: string | null;
+    title: string | null;
+    company: string | null;
+    email: string | null;
+    sourceConfidence: number | null;
+    tags: string[];
+  };
+};
+
+export type RankingDetail = {
+  id: string;
+  eventId: string | null;
+  eventName: string | null;
+  goalText: string;
+  modelName: string | null;
+  promptVersion: string | null;
+  createdAt: Date;
+  items: RankingDetailItem[];
+};
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+function evidencePayload(value: unknown): {
+  signals: string[];
+  scoreBreakdown: ContactScoreBreakdown | null;
+} {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { signals: [], scoreBreakdown: null };
+  }
+
+  const record = value as Record<string, unknown>;
+  const parsedBreakdown = ContactScoreBreakdownSchema.safeParse(record.scoreBreakdown);
+
+  return {
+    signals: stringList(record.signals),
+    scoreBreakdown: parsedBreakdown.success ? parsedBreakdown.data : null,
+  };
+}
+
+export async function getRankingById(
+  rankingId: string,
+  userId: string,
+): Promise<RankingDetail | null> {
+  const ranking = await db.ranking.findFirst({
+    where: { id: rankingId, userId },
+    include: {
+      event: { select: { id: true, name: true } },
+      items: {
+        orderBy: [{ rankPosition: "asc" }, { createdAt: "asc" }],
+        include: {
+          contact: {
+            select: {
+              id: true,
+              fullName: true,
+              title: true,
+              company: true,
+              email: true,
+              sourceConfidence: true,
+              tags: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!ranking) return null;
+
+  return {
+    id: ranking.id,
+    eventId: ranking.eventId,
+    eventName: ranking.event?.name ?? null,
+    goalText: ranking.goalText,
+    modelName: ranking.modelName,
+    promptVersion: ranking.promptVersion,
+    createdAt: ranking.createdAt,
+    items: ranking.items.map((item) => {
+      const evidence = evidencePayload(item.evidence);
+      return {
+        id: item.id,
+        contactId: item.contactId,
+        rankPosition: item.rankPosition,
+        score: item.score,
+        opportunityType: item.opportunityType,
+        reasoning: item.reasoning,
+        nextAction: item.nextAction,
+        confidence: item.confidence,
+        evidence: evidence.signals,
+        scoreBreakdown: evidence.scoreBreakdown,
+        contact: {
+          ...item.contact,
+          tags: stringList(item.contact.tags),
+        },
+      };
+    }),
+  };
+}
 
 export async function rankContacts(
   eventId: string,
