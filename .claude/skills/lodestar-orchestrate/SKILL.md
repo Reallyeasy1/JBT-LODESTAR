@@ -16,6 +16,13 @@ Hybrid:
 
 ---
 
+## Sprint Planning
+When the user asks to plan a sprint, start a new sprint, or says "what should we build this sprint":
+→ **Stop and invoke `lodestar-sprint-planning` skill instead of continuing here.**
+That skill asks all required questions first, then produces the sprint plan.
+
+---
+
 ## Phase 0: Context Check (always run first)
 
 1. Read `_workspace/technical_plan.md` — does it exist and is it current?
