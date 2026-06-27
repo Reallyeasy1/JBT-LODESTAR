@@ -1,6 +1,6 @@
 # PR Review Skill
 
-Performs a thorough, structured code review of the current branch (or a specified PR) against a base branch. Read-only by default. Never edits source files. Never posts GitHub comments unless `--post` is explicitly passed and confirmed.
+Performs a thorough, structured code review of the current branch (or a specified PR) against a base branch. After producing the review, always offers to post findings directly to the GitHub PR when a PR number is known. Pass `--post` to skip the confirmation prompt.
 
 ---
 
@@ -16,7 +16,7 @@ Parse `$ARGUMENTS` before doing anything else:
 | `--pr <N>` | Fetch PR #N metadata and use its base branch |
 | `--focus security` | Emphasis on security, auth, injection findings |
 | `--focus tests` | Emphasis on test coverage and missing tests |
-| `--post` | After review, offer to post findings as inline PR comments |
+| `--post` | Skip the "post to GitHub?" confirmation and post immediately after review |
 
 Flags can be combined: `/pr-review --pr 42 --focus security --post`
 
@@ -24,7 +24,7 @@ Extract:
 - `BASE_ARG` — value after `--base` or a bare branch name (not a flag)
 - `PR_NUMBER` — value after `--pr`
 - `FOCUS` — value after `--focus` (optional, one of: `security`, `tests`, `performance`, `all`)
-- `POST_MODE` — true if `--post` is present
+- `AUTO_POST` — true if `--post` is present (skips confirmation; posting is always offered when a PR is known)
 
 ---
 
@@ -132,36 +132,58 @@ Fill every section. If a section has no findings, write "None." or "None found."
 
 ---
 
-## Step 5 — Post Mode (only if --post was passed)
+## Step 5 — Post to GitHub PR
 
-If `POST_MODE` is true:
+Run this step whenever `PR_NUMBER` is known (from `--pr N`, or auto-detected via `gh pr view --json number`).
+If no PR number can be determined, skip and note: *"Run `/pr-review --pr <N>` to enable GitHub posting."*
 
-1. Show the full review to the user first
-2. Ask explicitly: **"Post these findings as inline PR comments on GitHub? (yes/no)"**
-3. Wait for confirmation — do not proceed without it
-4. If confirmed:
-   - Convert BLOCKER and HIGH findings to inline PR comments using:
-     ```bash
-     gh pr review <PR_NUMBER> --comment --body "<finding text>"
-     ```
-   - Or for inline comments on specific files:
-     ```bash
-     gh api repos/{owner}/{repo}/pulls/{pr}/comments \
-       -f body="<text>" \
-       -f commit_id="<sha>" \
-       -f path="<file>" \
-       -f position=<position>
-     ```
-   - MEDIUM, LOW, PRAISE → include in a single summary comment, not inline
-5. If declined: print "No comments posted." and stop
+1. Show the full review output first.
+2. If `AUTO_POST` is **false**: ask **"Post these findings to GitHub PR #N? (yes/no)"** and wait.
+   If `AUTO_POST` is **true** (`--post` was passed): proceed without asking.
+3. If confirmed (or `AUTO_POST`):
 
-**Never post without confirmation. Never edit source files. Never approve or request changes on the PR automatically.**
+   **BLOCKER and HIGH** — post as a PR review comment:
+   ```bash
+   gh pr review <PR_NUMBER> \
+     --comment \
+     --body "## Code Review — Action Required
+
+   [BLOCKER and HIGH findings, one per section with file + code snippet reference]"
+   ```
+
+   For findings tied to a specific line, use an inline comment instead:
+   ```bash
+   gh api repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments \
+     -f body="<finding text>" \
+     -f commit_id="$(gh pr view <PR_NUMBER> --json headRefOid -q .headRefOid)" \
+     -f path="<relative/file/path>" \
+     -f line=<line_number> \
+     -f side="RIGHT"
+   ```
+
+   **MEDIUM, LOW, PRAISE** — one consolidated comment:
+   ```bash
+   gh pr comment <PR_NUMBER> --body "## Code Review — Notes & Praise
+
+   ### Medium
+   [findings or 'None.']
+
+   ### Low / Style
+   [findings or 'None.']
+
+   ### Praise
+   [findings or 'None.']"
+   ```
+
+4. If the user declines: print "No comments posted." and stop.
+
+**Never approve or request-changes on the PR — comments only. Never edit source files.**
 
 ---
 
 ## Safety Constraints
 
-- Read-only by default. The only write operations permitted are GitHub comment posts via `gh`, and only after explicit user confirmation with `--post`.
+- Read-only by default. The only write operations permitted are GitHub comment posts via `gh`, and only after explicit confirmation (or `--post` flag).
 - Never run `git checkout`, `git reset`, `git apply`, or any command that modifies the working tree.
 - Never modify files in `src/`, `prisma/`, `okf/`, or any source directory.
 - If the diff is very large (>1000 lines), summarise the areas covered and note any sections that were sampled rather than read in full.
