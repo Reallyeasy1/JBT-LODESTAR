@@ -32,7 +32,7 @@ Demo user (Alex Tan)
 → Sees top 5 ranked with: score, opportunity type, reasoning, next action, confidence
 → Clicks top contact (Sarah Tan — investor)
 → Sees briefing: summary, why they matter, talking points, questions to ask, cultural notes
-→ Clicks "Generate Localised Intro" → gets contact-card intro text
+→ Clicks "Generate Intro (Japanese)" → gets contact-card intro text
 → Types a meeting note
 → Clicks "Draft Follow-Up"
 → Sees follow-up draft: subject + body, status "Draft — Review Before Sending"
@@ -59,10 +59,10 @@ Demo line: *"Before Lodestar, you leave events with a list of names. After Lodes
 
 | Page | Path | Status |
 |------|------|--------|
-| Landing | `/` | To build — minimal CTA pointing to demo event (Issue #12) |
-| Event | `/events/[eventId]` | To build (Issue #3) |
-| Contact | `/contacts/[contactId]` | To build (Issue #7) |
-| Ranking | `/rankings/[rankingId]` | To build (Issue #5) |
+| Landing | `/` | Built in stacked demo-polish PR — CTA points to seeded event |
+| Event | `/events/[eventId]` | Built in stacked event dashboard PR |
+| Contact | `/contacts/[contactId]` | Built in stacked contact workflow PR |
+| Ranking | `/rankings/[rankingId]` | Built in stacked ranking results PR |
 
 **Deferred pages** (not in demo vertical slice):
 - `/onboarding` — demo uses mock `getCurrentUser()` + seed data, no onboarding flow needed

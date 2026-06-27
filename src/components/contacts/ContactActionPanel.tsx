@@ -251,7 +251,7 @@ export function ContactActionPanel({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-lg font-black text-emerald-950">{followUp.subject ?? "Follow-up draft"}</h3>
               <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-900">
-                Requires review
+                Draft — Review Before Sending
               </span>
             </div>
             <pre className="mt-3 whitespace-pre-wrap font-sans text-sm leading-6 text-stone-700">{followUp.draftText}</pre>
