@@ -11,10 +11,69 @@ import { db } from "@/lib/db";
 import { completeAgentRun, startAgentRun } from "@/services/agent-run.service";
 import { checkOutput } from "@/services/verification.service";
 
+export type BriefingDetail = {
+  id: string;
+  personSummary: string | null;
+  whyTheyMatter: string | null;
+  likelyGoal: string | null;
+  decisionAuthority: string | null;
+  talkingPoints: string[];
+  questionsToAsk: string[];
+  culturalNotes: string[];
+  warnings: string[];
+  confidenceScore: number | null;
+  createdAt: Date;
+};
+
 function stringList(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
+}
+
+function toBriefingDetail(briefing: {
+  id: string;
+  personSummary: string | null;
+  whyTheyMatter: string | null;
+  likelyGoal: string | null;
+  decisionAuthority: string | null;
+  talkingPoints: Prisma.JsonValue | null;
+  questionsToAsk: Prisma.JsonValue | null;
+  culturalNotes: Prisma.JsonValue | null;
+  warnings: Prisma.JsonValue | null;
+  confidenceScore: number | null;
+  createdAt: Date;
+}): BriefingDetail {
+  return {
+    id: briefing.id,
+    personSummary: briefing.personSummary,
+    whyTheyMatter: briefing.whyTheyMatter,
+    likelyGoal: briefing.likelyGoal,
+    decisionAuthority: briefing.decisionAuthority,
+    talkingPoints: stringList(briefing.talkingPoints),
+    questionsToAsk: stringList(briefing.questionsToAsk),
+    culturalNotes: stringList(briefing.culturalNotes),
+    warnings: stringList(briefing.warnings),
+    confidenceScore: briefing.confidenceScore,
+    createdAt: briefing.createdAt,
+  };
+}
+
+export async function getLatestBriefingForContact(
+  contactId: string,
+  userId: string,
+): Promise<BriefingDetail | null> {
+  const contact = await db.contact.findFirst({
+    where: { id: contactId, userId },
+    select: { id: true },
+  });
+  if (!contact) throw new Error("Contact not found");
+
+  const briefing = await db.briefing.findFirst({
+    where: { contactId, userId },
+    orderBy: { createdAt: "desc" },
+  });
+  return briefing ? toBriefingDetail(briefing) : null;
 }
 
 export async function generateBriefing(contactId: string, userId: string): Promise<BriefingOutput> {
