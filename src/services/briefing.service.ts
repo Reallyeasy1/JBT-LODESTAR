@@ -9,8 +9,11 @@
  * See `okf/workflows/briefing-generation.md`.
  */
 
-import { db } from "@/lib/db";
-import { getLLMClient } from "@/ai/client";
+import { db as prismaDb } from "@/lib/db";
+import {
+  getLLMClient as getDefaultLLMClient,
+  type LLMClient,
+} from "@/ai/client";
 import {
   buildBriefingMessages,
   BRIEFING_PROMPT_VERSION,
@@ -21,7 +24,10 @@ import {
   type BriefingOutput,
 } from "@/ai/schemas/briefing.schema";
 import { verifyBriefing } from "@/services/verification.service";
-import { startAgentRun, completeAgentRun } from "@/services/agent-run.service";
+import {
+  startAgentRun as defaultStartAgentRun,
+  completeAgentRun as defaultCompleteAgentRun,
+} from "@/services/agent-run.service";
 
 export type GenerateBriefingParams = {
   contactId: string;
@@ -32,6 +38,70 @@ export type GenerateBriefingResult = {
   briefingId: string;
   agentRunId: string;
   briefing: BriefingOutput;
+};
+
+type BriefingContactRecord = {
+  fullName: string | null;
+  title: string | null;
+  company: string | null;
+  languages: unknown;
+  tags: unknown;
+  notes: string | null;
+  sourceConfidence: number | null;
+  event: {
+    eventGoal: string | null;
+    name: string | null;
+  } | null;
+};
+
+type BriefingUserProfileRecord = {
+  languages: unknown;
+  preferredTone: string | null;
+} | null;
+
+type BriefingCreateData = {
+  userId: string;
+  contactId: string;
+  agentRunId: string;
+  personSummary: string;
+  whyTheyMatter: string;
+  likelyGoal: string | null;
+  decisionAuthority: BriefingOutput["decisionAuthority"];
+  talkingPoints: string[];
+  questionsToAsk: string[];
+  culturalNotes: string[];
+  warnings: string[];
+  confidenceScore: number;
+};
+
+type BriefingDbClient = {
+  contact: {
+    findFirst(args: {
+      where: { id: string; userId: string };
+      include: { event: true };
+    }): Promise<BriefingContactRecord | null>;
+  };
+  userProfile: {
+    findUnique(args: {
+      where: { userId: string };
+    }): Promise<BriefingUserProfileRecord>;
+  };
+  briefing: {
+    create(args: {
+      data: BriefingCreateData;
+      select: { id: true };
+    }): Promise<{ id: string }>;
+  };
+};
+
+type StartAgentRun = typeof defaultStartAgentRun;
+type CompleteAgentRun = typeof defaultCompleteAgentRun;
+
+export type BriefingServiceDeps = {
+  db: BriefingDbClient;
+  getLLMClient: () => LLMClient;
+  startAgentRun: StartAgentRun;
+  completeAgentRun: CompleteAgentRun;
 };
 
 function asStringArray(value: unknown): string[] {
@@ -165,104 +235,116 @@ function buildMockBriefing(ctx: BriefingPromptContext): unknown {
  * @throws if the contact is not found / not owned, or if the AI output fails
  *         Zod validation.
  */
-export async function generateBriefing(
-  params: GenerateBriefingParams
-): Promise<GenerateBriefingResult> {
-  const { contactId, userId } = params;
+export function createBriefingService(deps: BriefingServiceDeps) {
+  async function generateBriefing(
+    params: GenerateBriefingParams
+  ): Promise<GenerateBriefingResult> {
+    const { contactId, userId } = params;
 
-  // 1. Load context (ownership enforced via userId).
-  const contact = await db.contact.findFirst({
-    where: { id: contactId, userId },
-    include: { event: true },
-  });
-  if (!contact) {
-    throw new Error("Contact not found or not owned by user");
-  }
-
-  const profile = await db.userProfile.findUnique({ where: { userId } });
-
-  const promptContext: BriefingPromptContext = {
-    contact: {
-      fullName: contact.fullName,
-      title: contact.title,
-      company: contact.company,
-      languages: asStringArray(contact.languages),
-      tags: asStringArray(contact.tags),
-      notes: contact.notes,
-      sourceConfidence: contact.sourceConfidence,
-    },
-    goal: contact.event?.eventGoal ?? null,
-    eventName: contact.event?.name ?? null,
-    userLanguages: asStringArray(profile?.languages),
-    preferredTone: profile?.preferredTone ?? null,
-  };
-
-  // 2. Start AgentRun.
-  const agentRunId = await startAgentRun({
-    userId,
-    taskType: "briefing",
-    agentType: "ai-workflow-engineer",
-    modelName: getLLMClient().modelName,
-    promptVersion: BRIEFING_PROMPT_VERSION,
-    inputJson: { contactId, promptContext },
-  });
-
-  const startedAt = Date.now();
-  try {
-    // 3. Build prompt + 4. Call LLM (mock supplies canned output via context).
-    const client = getLLMClient();
-    const messages = buildBriefingMessages(promptContext);
-    const completion = await client.complete({
-      task: "briefing",
-      messages,
-      context: { mockResponse: buildMockBriefing(promptContext) },
+    // 1. Load context (ownership enforced via userId).
+    const contact = await deps.db.contact.findFirst({
+      where: { id: contactId, userId },
+      include: { event: true },
     });
+    if (!contact) {
+      throw new Error("Contact not found or not owned by user");
+    }
 
-    // 5. Zod validate (throws on invalid output).
-    const parsed: unknown = JSON.parse(completion.text);
-    const validated = BriefingOutputSchema.parse(parsed);
+    const profile = await deps.db.userProfile.findUnique({ where: { userId } });
 
-    // 6. Verify (anti-stereotyping; may lower confidence + add warnings).
-    const { briefing } = verifyBriefing(validated);
-
-    const latencyMs = Date.now() - startedAt;
-
-    // 7. Save Briefing record.
-    const saved = await db.briefing.create({
-      data: {
-        userId,
-        contactId,
-        agentRunId,
-        personSummary: briefing.personSummary,
-        whyTheyMatter: briefing.whyTheyMatter,
-        likelyGoal: briefing.likelyGoal ?? null,
-        decisionAuthority: briefing.decisionAuthority,
-        talkingPoints: briefing.talkingPoints,
-        questionsToAsk: briefing.questionsToAsk,
-        culturalNotes: briefing.culturalNotes,
-        warnings: briefing.warnings,
-        confidenceScore: briefing.confidenceScore,
+    const promptContext: BriefingPromptContext = {
+      contact: {
+        fullName: contact.fullName,
+        title: contact.title,
+        company: contact.company,
+        languages: asStringArray(contact.languages),
+        tags: asStringArray(contact.tags),
+        notes: contact.notes,
+        sourceConfidence: contact.sourceConfidence,
       },
-      select: { id: true },
+      goal: contact.event?.eventGoal ?? null,
+      eventName: contact.event?.name ?? null,
+      userLanguages: asStringArray(profile?.languages),
+      preferredTone: profile?.preferredTone ?? null,
+    };
+
+    const client = deps.getLLMClient();
+
+    // 2. Start AgentRun.
+    const agentRunId = await deps.startAgentRun({
+      userId,
+      taskType: "briefing",
+      agentType: "ai-workflow-engineer",
+      modelName: client.modelName,
+      promptVersion: BRIEFING_PROMPT_VERSION,
+      inputJson: { contactId, promptContext },
     });
 
-    // 8. Complete AgentRun.
-    await completeAgentRun(agentRunId, {
-      outputJson: briefing,
-      status: "success",
-      latencyMs,
-      tokenInput: completion.tokenInput,
-      tokenOutput: completion.tokenOutput,
-    });
+    const startedAt = Date.now();
+    try {
+      // 3. Build prompt + 4. Call LLM (mock supplies canned output via context).
+      const messages = buildBriefingMessages(promptContext);
+      const completion = await client.complete({
+        task: "briefing",
+        messages,
+        context: { mockResponse: buildMockBriefing(promptContext) },
+      });
 
-    return { briefingId: saved.id, agentRunId, briefing };
-  } catch (err) {
-    await completeAgentRun(agentRunId, {
-      outputJson: null,
-      status: "error",
-      latencyMs: Date.now() - startedAt,
-      errorMessage: err instanceof Error ? err.message : String(err),
-    });
-    throw err;
+      // 5. Zod validate (throws on invalid output).
+      const parsed: unknown = JSON.parse(completion.text);
+      const validated = BriefingOutputSchema.parse(parsed);
+
+      // 6. Verify (anti-stereotyping; may lower confidence + add warnings).
+      const { briefing } = verifyBriefing(validated);
+
+      const latencyMs = Date.now() - startedAt;
+
+      // 7. Save Briefing record.
+      const saved = await deps.db.briefing.create({
+        data: {
+          userId,
+          contactId,
+          agentRunId,
+          personSummary: briefing.personSummary,
+          whyTheyMatter: briefing.whyTheyMatter,
+          likelyGoal: briefing.likelyGoal ?? null,
+          decisionAuthority: briefing.decisionAuthority,
+          talkingPoints: briefing.talkingPoints,
+          questionsToAsk: briefing.questionsToAsk,
+          culturalNotes: briefing.culturalNotes,
+          warnings: briefing.warnings,
+          confidenceScore: briefing.confidenceScore,
+        },
+        select: { id: true },
+      });
+
+      // 8. Complete AgentRun.
+      await deps.completeAgentRun(agentRunId, {
+        outputJson: briefing,
+        status: "success",
+        latencyMs,
+        tokenInput: completion.tokenInput,
+        tokenOutput: completion.tokenOutput,
+      });
+
+      return { briefingId: saved.id, agentRunId, briefing };
+    } catch (err) {
+      await deps.completeAgentRun(agentRunId, {
+        outputJson: null,
+        status: "error",
+        latencyMs: Date.now() - startedAt,
+        errorMessage: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
+    }
   }
+
+  return { generateBriefing };
 }
+
+export const { generateBriefing } = createBriefingService({
+  db: prismaDb as unknown as BriefingDbClient,
+  getLLMClient: getDefaultLLMClient,
+  startAgentRun: defaultStartAgentRun,
+  completeAgentRun: defaultCompleteAgentRun,
+});
