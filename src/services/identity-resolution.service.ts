@@ -51,7 +51,7 @@ export async function resolveContact(
     if (match) return { result: "duplicate", existingContactId: match.id, confidence: 0.99 };
   }
 
-  // Same normalised full name + same company → possible-duplicate
+  // Same normalised full name + same company -> possible-duplicate
   if (input.fullName && input.company) {
     const candidates = await db.contact.findMany({
       where: { userId, company: input.company },
@@ -65,7 +65,7 @@ export async function resolveContact(
       const normExisting = normaliseName(c.fullName);
 
       if (normInput === normExisting) {
-        return { result: "duplicate", existingContactId: c.id, confidence: 0.95 };
+        return { result: "possible-duplicate", existingContactId: c.id, confidence: 0.95 };
       }
 
       // Partial name match (first name or last name shared)
