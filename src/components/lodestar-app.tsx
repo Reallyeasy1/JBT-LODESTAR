@@ -39,7 +39,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   Contact,
   demoContacts,
@@ -669,23 +669,78 @@ function InsightRail({ onNavigate }: { onNavigate: (view: View) => void }) {
 
 function BriefingSheet({ contact, onClose, onToast }: { contact: Contact; onClose: () => void; onToast: (message: string) => void }) {
   const [language, setLanguage] = useState("English");
+  const sheetRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const intro = language === "Mandarin"
     ? "你好，我是 Kee。我正在打造 Lodestar，帮助活动参与者把新联系人转化为清晰的下一步行动。"
     : language === "Bahasa"
       ? "Hai, saya Kee. Saya sedang membina Lodestar untuk membantu peserta acara menukar kenalan baharu kepada tindakan seterusnya yang jelas."
       : "Hi, I’m Kee. I’m building Lodestar to help event attendees turn new contacts into clear next actions.";
 
+  useEffect(() => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+
+    closeButtonRef.current?.focus();
+
+    return () => {
+      previouslyFocused?.focus();
+    };
+  }, []);
+
   async function copyIntro() {
     await navigator.clipboard?.writeText(intro);
     onToast(`${language} intro copied`);
   }
 
+  function handleSheetKeyDown(eventValue: KeyboardEvent<HTMLElement>) {
+    if (eventValue.key === "Escape") {
+      eventValue.preventDefault();
+      onClose();
+      return;
+    }
+
+    if (eventValue.key !== "Tab") return;
+
+    const focusableElements = Array.from(
+      sheetRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ) ?? [],
+    ).filter((element) => !element.hasAttribute("disabled") && element.offsetParent !== null);
+
+    if (focusableElements.length === 0) {
+      eventValue.preventDefault();
+      return;
+    }
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement;
+
+    if (eventValue.shiftKey && activeElement === firstElement) {
+      eventValue.preventDefault();
+      lastElement.focus();
+    } else if (!eventValue.shiftKey && activeElement === lastElement) {
+      eventValue.preventDefault();
+      firstElement.focus();
+    }
+  }
+
   return (
     <div className="sheet-backdrop" role="presentation" onMouseDown={onClose}>
-      <section className="briefing-sheet" role="dialog" aria-modal="true" aria-labelledby="briefing-title" onMouseDown={(eventValue) => eventValue.stopPropagation()}>
+      <section
+        ref={sheetRef}
+        className="briefing-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="briefing-title"
+        onKeyDown={handleSheetKeyDown}
+        onMouseDown={(eventValue) => eventValue.stopPropagation()}
+      >
         <div className="sheet-handle" />
         <header className="sheet-header">
-          <button className="icon-button" onClick={onClose} aria-label="Close briefing"><X size={20} /></button>
+          <button ref={closeButtonRef} className="icon-button" onClick={onClose} aria-label="Close briefing"><X size={20} /></button>
           <span>Contact briefing</span>
           <button className="icon-button" aria-label="More options"><SlidersHorizontal size={19} /></button>
         </header>
@@ -739,14 +794,30 @@ export function LodestarApp() {
   const [contacts, setContacts] = useState<Contact[]>(demoContacts);
   const [activeContact, setActiveContact] = useState<Contact | null>(null);
   const [toast, setToast] = useState("");
+  const toastTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [view]);
 
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current !== null) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
+
   function showToast(message: string) {
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+
     setToast(message);
-    window.setTimeout(() => setToast(""), 2600);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast("");
+      toastTimerRef.current = null;
+    }, 2600);
   }
 
   function addContact(contact: Contact) {
