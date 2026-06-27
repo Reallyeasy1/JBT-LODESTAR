@@ -30,6 +30,20 @@ export function selectStatedLanguage(languages: string[], requestedLanguage?: st
   return selected;
 }
 
+export function enforceSelectedLanguage(
+  output: LocalisationOutput,
+  selectedLanguage: string,
+): LocalisationOutput {
+  if (output.languageUsed.trim().toLowerCase() !== selectedLanguage.trim().toLowerCase()) {
+    throw new Error("Generated localisation language did not match the selected contact language");
+  }
+
+  return LocalisationOutputSchema.parse({
+    ...output,
+    languageUsed: selectedLanguage,
+  });
+}
+
 export function applyLocalisationVerification(output: LocalisationOutput): LocalisationOutput {
   const verification = checkOutput(output, "localisation");
   return LocalisationOutputSchema.parse({
@@ -88,26 +102,38 @@ export async function generateLocalisation(
       mockOutput: createMockLocalisation(promptInput),
       modelName: "mock-v1",
     });
-    const verified = applyLocalisationVerification(generation.output);
+    const languageChecked = enforceSelectedLanguage(generation.output, selectedLanguage);
+    const verified = applyLocalisationVerification(languageChecked);
 
-    const localisation = await db.localisation.create({
-      data: {
-        userId,
-        contactId,
-        agentRunId,
-        openerText: verified.openerText,
-        languageUsed: verified.languageUsed,
-        confidenceScore: verified.confidenceScore,
-        warnings: verified.warnings as Prisma.InputJsonValue,
-      },
-    });
-    const output = LocalisationOutputSchema.parse({ ...verified, localisationId: localisation.id });
-    await completeAgentRun(agentRunId, {
-      outputJson: output,
-      status: "success",
-      latencyMs: Date.now() - startedAt,
-      tokenInput: generation.tokenInput,
-      tokenOutput: generation.tokenOutput,
+    const output = await db.$transaction(async (tx) => {
+      const localisation = await tx.localisation.create({
+        data: {
+          userId,
+          contactId,
+          agentRunId,
+          openerText: verified.openerText,
+          languageUsed: selectedLanguage,
+          confidenceScore: verified.confidenceScore,
+          warnings: verified.warnings as Prisma.InputJsonValue,
+        },
+      });
+      const completedOutput = LocalisationOutputSchema.parse({
+        ...verified,
+        languageUsed: selectedLanguage,
+        localisationId: localisation.id,
+      });
+      await tx.agentRun.update({
+        where: { id: agentRunId },
+        data: {
+          outputJson: completedOutput as Prisma.InputJsonValue,
+          status: "success",
+          latencyMs: Date.now() - startedAt,
+          tokenInput: generation.tokenInput,
+          tokenOutput: generation.tokenOutput,
+          errorMessage: null,
+        },
+      });
+      return completedOutput;
     });
     return output;
   } catch (error) {
