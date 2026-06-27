@@ -59,10 +59,10 @@ Demo line: *"Before Lodestar, you leave events with a list of names. After Lodes
 
 | Page | Path | Status |
 |------|------|--------|
-| Landing | `/` | To build — minimal CTA pointing to demo event (Issue #12) |
-| Event | `/events/[eventId]` | To build (Issue #3) |
-| Contact | `/contacts/[contactId]` | To build (Issue #7) |
-| Ranking | `/rankings/[rankingId]` | To build (Issue #5) |
+| Landing | `/` | Built as mobile-first app shell; backend event path remains available |
+| Event | `/events/[eventId]` | Built — seeded event dashboard |
+| Contact | `/contacts/[contactId]` | Built in replacement PR for Issue #7 |
+| Ranking | `/rankings/[rankingId]` | Built in replacement PR for Issue #5 |
 
 **Deferred pages** (not in demo vertical slice):
 - `/onboarding` — demo uses mock `getCurrentUser()` + seed data, no onboarding flow needed

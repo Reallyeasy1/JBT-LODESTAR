@@ -128,7 +128,7 @@ async function main() {
       endDate: new Date("2026-06-28"),
       industry: "AI/Startups",
       description: "48-hour hackathon focused on AI infrastructure and developer tools.",
-      eventGoal: "Find investors, pilot customers, and AI/backend collaborators.",
+      eventGoal: "Find investors, pilot customers, and AI/backend collaborators for Lodestar.",
       tags: ["hackathon", "ai", "startups", "singapore"],
     },
   });
