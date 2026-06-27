@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 const RequestSchema = z.object({
   contactId: z.string().min(1),
-  meetingNote: z.string().min(1, "meetingNote is required"),
+  meetingNote: z.string().trim().min(1, "meetingNote is required"),
 });
 
 /**

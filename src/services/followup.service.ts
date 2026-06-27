@@ -25,35 +25,31 @@ type ContactForFollowUp = {
 
 /**
  * Produces the mock draft payload. Deterministic, no network, no API key.
- * Tailored to feel realistic for an investor/VC follow-up after the
- * Sup Build2026 Hackathon (the demo scenario). Returns an object the mock
- * LLM client echoes back as JSON text, which the service then Zod-validates.
+ * Uses only confirmed contact/sender fields plus the supplied meeting note.
+ * Returns an object the mock LLM client echoes back as JSON text, which the
+ * service then Zod-validates.
  */
-function buildMockDraft(
+export function buildMockDraft(
   contact: ContactForFollowUp,
   senderName: string,
   meetingNote: string
 ): FollowUpOutput {
   const firstName = (contact.fullName ?? "there").split(" ")[0] || "there";
-  const noteSnippet = meetingNote.trim().slice(0, 160);
+  const normalizedNote = meetingNote.trim();
+  const noteSnippet =
+    normalizedNote.length > 240
+      ? `${normalizedNote.slice(0, 237)}...`
+      : normalizedNote;
 
-  const subject = `Great to connect at Sup Build2026, ${firstName}`;
+  const subject = `Following up on our conversation, ${firstName}`;
 
   const body = [
     `Hi ${firstName},`,
     "",
-    `It was a real pleasure meeting you at the Sup Build2026 Hackathon in Singapore. ` +
-      `Thank you for taking the time to dig into what we're building at Lodestar — your ` +
-      `perspective on where AI networking tools are heading was genuinely useful, and it ` +
-      `gave me a few things to think about as we shape the roadmap.`,
+    "Thank you for connecting. I wanted to follow up on our conversation" +
+      (noteSnippet ? ` about: "${noteSnippet}".` : "."),
     "",
-    `Following up on our conversation${
-      noteSnippet ? ` (you mentioned: "${noteSnippet}")` : ""
-    }, I'd love to keep the dialogue going. If you're open to it, I can send over a short ` +
-      `deck and our early traction numbers so you can get a clearer picture ahead of any ` +
-      `next step. Happy to work around your schedule for a longer chat in the coming weeks.`,
-    "",
-    `Thanks again for the time and the encouragement — it meant a lot.`,
+    "I appreciated the chance to connect and wanted to keep this follow-up anchored to what we discussed.",
     "",
     `Warm regards,`,
     senderName,
@@ -78,6 +74,11 @@ export async function generateFollowUp(
   contactId: string,
   meetingNote: string
 ): Promise<GenerateFollowUpResult> {
+  const normalizedMeetingNote = meetingNote.trim();
+  if (!normalizedMeetingNote) {
+    throw new Error("meetingNote is required");
+  }
+
   const user = await getCurrentUser();
 
   const contact = await db.contact.findFirst({
@@ -93,13 +94,13 @@ export async function generateFollowUp(
     contactName: contact.fullName ?? "the contact",
     contactTitle: contact.title,
     contactCompany: contact.company,
-    meetingNote,
+    meetingNote: normalizedMeetingNote,
     senderName: user.name,
   });
 
   const inputJson = {
     contactId,
-    meetingNote,
+    meetingNote: normalizedMeetingNote,
     messages,
   };
 
@@ -115,7 +116,7 @@ export async function generateFollowUp(
   const startedAt = Date.now();
 
   try {
-    const mockDraft = buildMockDraft(contact, user.name, meetingNote);
+    const mockDraft = buildMockDraft(contact, user.name, normalizedMeetingNote);
 
     const llm = getLLMClient();
     const completion = await llm.complete({

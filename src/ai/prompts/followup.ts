@@ -29,6 +29,7 @@ export function buildFollowUpPrompt(input: FollowUpPromptInput): LLMMessage[] {
     "grounded ONLY in the meeting note provided. Do not invent commitments, facts, or",
     "personal details. Do not infer cultural or personality traits. Never imply the email",
     "has been or will be sent automatically — it is always a draft for the sender to review.",
+    "Use contact and sender fields only for confirmed names, roles, and organizations.",
     "Respond with strict JSON matching this shape:",
     '{ "subject": string, "body": string, "suggestedTone": "formal"|"friendly"|"professional", "requiresUserReview": true }',
   ].join(" ");
