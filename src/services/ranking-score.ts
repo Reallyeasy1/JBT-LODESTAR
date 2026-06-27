@@ -102,14 +102,14 @@ function goalOpportunityTypes(goal: string): Set<OpportunityType> {
   const text = normalise(goal);
   const types = new Set<OpportunityType>();
 
-  if (/\b(investor|investment|fundraising|fund|seed|capital|vc|angel)\b/.test(text)) types.add("investor");
-  if (/\b(customer|pilot|buyer|enterprise|sales)\b/.test(text)) types.add("customer");
-  if (/\b(collaborator|collaboration|engineer|developer|technical|ai|backend|partner)\b/.test(text)) {
+  if (/\b(investors?|investments?|fundraising|funds?|seed|capital|vc|angels?)\b/.test(text)) types.add("investor");
+  if (/\b(customers?|pilots?|buyers?|enterprise|sales)\b/.test(text)) types.add("customer");
+  if (/\b(collaborators?|collaboration|engineers?|developers?|technical|ai|backend|partners?)\b/.test(text)) {
     types.add("collaborator");
   }
-  if (/\b(mentor|advisor|adviser)\b/.test(text)) types.add("mentor");
-  if (/\b(hire|hiring|candidate|team)\b/.test(text)) types.add("hire");
-  if (/\b(recruiter|recruiting)\b/.test(text)) types.add("recruiter");
+  if (/\b(mentors?|advisors?|advisers?)\b/.test(text)) types.add("mentor");
+  if (/\b(hires?|hiring|candidates?|team)\b/.test(text)) types.add("hire");
+  if (/\b(recruiters?|recruiting)\b/.test(text)) types.add("recruiter");
   if (/\b(friend|community)\b/.test(text)) types.add("friend");
 
   return types;

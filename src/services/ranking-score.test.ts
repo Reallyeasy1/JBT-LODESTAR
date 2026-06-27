@@ -44,6 +44,50 @@ const priya = contact({
   notes: "Recruiting for engineering roles. Not directly relevant to current goals.",
 });
 
+const seededDemoContacts = [
+  sarah,
+  contact({
+    id: "daniel",
+    fullName: "Daniel Wong",
+    title: "CTO",
+    company: "BeyondFit",
+    tags: ["technical", "ai-collaborator", "health-tech"],
+    notes:
+      "Building AI personalisation for fitness. Their infra team uses similar LLM orchestration patterns to ours. Open to API integration or white-label. Demo our ranking API to him.",
+  }),
+  contact({
+    id: "mei",
+    fullName: "Mei Nakamura",
+    title: "Head of Product",
+    company: "Stripe Singapore",
+    tags: ["enterprise", "pilot-customer", "payments"],
+    notes:
+      "Running internal hackathon tooling evaluation at Stripe. Specifically asked about how we handle post-event follow-up fatigue. Could be a pilot customer for enterprise tier.",
+  }),
+  priya,
+  contact({
+    id: "sarah-t",
+    fullName: "Sarah T.",
+    title: "Partner",
+    company: "Seed Ventures",
+    email: null,
+    linkedinUrl: null,
+    sourceType: "manual",
+    sourceConfidence: 0.6,
+    tags: ["investor"],
+    notes: "Met briefly. Same company as Sarah Tan — possible duplicate or different partner.",
+  }),
+  contact({
+    id: "aaron",
+    fullName: "Aaron Lee",
+    title: "Full-Stack Developer",
+    company: "CodeCraft Labs",
+    tags: ["developer", "open-source"],
+    notes:
+      "Interested in contributing to open-source tooling. Could be a collaborator on SDK or developer community angle.",
+  }),
+];
+
 test("scores every dimension within its declared range and totals to the final score", () => {
   const result = scoreContactForGoal(sarah, "Find investors", "AI/Startups", now);
   ContactScoreBreakdownSchema.parse(result.scoreBreakdown);
@@ -60,4 +104,13 @@ test("ranks the investor above the recruiter for an investor goal", () => {
   assert.equal(ranked[0].rank, 1);
   assert.ok(ranked[0].score > ranked[1].score);
   RankingOutputSchema.parse({ eventId: "event-1", goal: "Find investors", rankedContacts: ranked });
+});
+
+test("keeps Sarah Tan first for the seeded demo goal", () => {
+  const goal = "Find investors, pilot customers, and AI/backend collaborators for Lodestar";
+  const ranked = rankContactRecords(seededDemoContacts, goal, "AI/Startups", now);
+  assert.equal(ranked[0].contactId, "sarah");
+  assert.equal(ranked[0].rank, 1);
+  assert.equal(ranked[0].opportunityType, "investor");
+  RankingOutputSchema.parse({ eventId: "event-1", goal, rankedContacts: ranked });
 });

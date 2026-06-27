@@ -4,6 +4,69 @@ import { db } from "@/lib/db";
 import { completeAgentRun, startAgentRun } from "@/services/agent-run.service";
 import { rankContactRecords } from "@/services/ranking-score";
 
+export type RankingEvidenceDetails = {
+  signals: string[];
+  scoreBreakdown: Record<string, number> | null;
+};
+
+export type RankedContactResult = {
+  id: string;
+  rankPosition: number;
+  score: number | null;
+  opportunityType: string | null;
+  reasoning: string | null;
+  nextAction: string | null;
+  confidence: number | null;
+  evidence: RankingEvidenceDetails;
+  contact: {
+    id: string;
+    fullName: string | null;
+    title: string | null;
+    company: string | null;
+    tags: string[];
+  };
+};
+
+export type RankingDetail = {
+  id: string;
+  goalText: string;
+  modelName: string | null;
+  promptVersion: string | null;
+  createdAt: Date;
+  event: {
+    id: string;
+    name: string;
+    location: string | null;
+  } | null;
+  items: RankedContactResult[];
+};
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function numberRecord(value: unknown): Record<string, number> | null {
+  if (!isRecord(value)) return null;
+  const entries = Object.entries(value).filter((entry): entry is [string, number] => (
+    typeof entry[1] === "number" && Number.isFinite(entry[1])
+  ));
+  return entries.length > 0 ? Object.fromEntries(entries) : null;
+}
+
+function parseRankingEvidence(value: Prisma.JsonValue | null): RankingEvidenceDetails {
+  if (!isRecord(value)) return { signals: [], scoreBreakdown: null };
+  return {
+    signals: stringList(value.signals),
+    scoreBreakdown: numberRecord(value.scoreBreakdown),
+  };
+}
+
 export async function rankContacts(
   eventId: string,
   requestedGoal: string | undefined,
@@ -81,4 +144,61 @@ export async function rankContacts(
     }).catch(() => undefined);
     throw error;
   }
+}
+
+export async function getRankingById(
+  rankingId: string,
+  userId: string,
+): Promise<RankingDetail | null> {
+  const ranking = await db.ranking.findFirst({
+    where: { id: rankingId, userId },
+    include: {
+      event: {
+        select: {
+          id: true,
+          name: true,
+          location: true,
+        },
+      },
+      items: {
+        orderBy: { rankPosition: "asc" },
+        include: {
+          contact: {
+            select: {
+              id: true,
+              fullName: true,
+              title: true,
+              company: true,
+              tags: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!ranking) return null;
+
+  return {
+    id: ranking.id,
+    goalText: ranking.goalText,
+    modelName: ranking.modelName,
+    promptVersion: ranking.promptVersion,
+    createdAt: ranking.createdAt,
+    event: ranking.event,
+    items: ranking.items.map((item) => ({
+      id: item.id,
+      rankPosition: item.rankPosition,
+      score: item.score,
+      opportunityType: item.opportunityType,
+      reasoning: item.reasoning,
+      nextAction: item.nextAction,
+      confidence: item.confidence,
+      evidence: parseRankingEvidence(item.evidence),
+      contact: {
+        ...item.contact,
+        tags: stringList(item.contact.tags),
+      },
+    })),
+  };
 }
