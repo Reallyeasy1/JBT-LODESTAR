@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   ArrowRight,
   Bell,
@@ -355,7 +356,9 @@ function ContactsView({
           <h1>People</h1>
           <p>Ranked against your current event goal.</p>
         </div>
-        <button className="round-add-button" aria-label="Add contact"><Plus size={21} /></button>
+        <Link className="round-add-button" href="/contacts/create" aria-label="Add contact">
+          <Plus size={21} />
+        </Link>
       </div>
       <div className="search-row">
         <label className="search-field">
@@ -418,6 +421,85 @@ function CaptureView({ onAdd }: { onAdd: (contact: Contact) => void }) {
   const [role, setRole] = useState("");
   const [company, setCompany] = useState("");
   const [note, setNote] = useState("");
+  const [cameraStatus, setCameraStatus] = useState<"idle" | "starting" | "ready" | "error">("idle");
+  const [cameraError, setCameraError] = useState("");
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  function stopCamera(resetStatus = true) {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    if (resetStatus) {
+      setCameraStatus("idle");
+    }
+  }
+
+  async function startCamera() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraStatus("error");
+      setCameraError("Webcam access is not available in this browser.");
+      return;
+    }
+
+    setCameraStatus("starting");
+    setCameraError("");
+
+    try {
+      stopCamera();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setCameraStatus("ready");
+    } catch {
+      setCameraStatus("error");
+      setCameraError("Camera permission was blocked or no webcam was found.");
+    }
+  }
+
+  function captureFrameForDraft() {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+    if (!video.videoWidth || !video.videoHeight) {
+      setCameraError("Camera preview is still starting. Try again in a moment.");
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
+    window.sessionStorage.setItem("lodestar.pendingContactImage", canvas.toDataURL("image/jpeg", 0.9));
+    window.location.assign("/contacts/create");
+  }
+
+  useEffect(() => {
+    if (mode !== "scan") {
+      stopCamera();
+    }
+  }, [mode]);
+
+  useEffect(() => {
+    if (cameraStatus !== "ready" || !videoRef.current || !streamRef.current) return;
+
+    const video = videoRef.current;
+    video.srcObject = streamRef.current;
+    void video.play().catch(() => {
+      setCameraStatus("error");
+      setCameraError("Camera started, but the preview could not play.");
+    });
+  }, [cameraStatus]);
+
+  useEffect(() => () => stopCamera(false), []);
 
   function submitManual(eventValue: FormEvent<HTMLFormElement>) {
     eventValue.preventDefault();
@@ -465,18 +547,52 @@ function CaptureView({ onAdd }: { onAdd: (contact: Contact) => void }) {
       {mode === "scan" ? (
         <>
           <section className="camera-card">
-            <div className="camera-frame" aria-hidden="true">
+            <div className="camera-frame">
               <span className="camera-corner top-left" />
               <span className="camera-corner top-right" />
               <span className="camera-corner bottom-left" />
               <span className="camera-corner bottom-right" />
-              <Camera size={40} />
+              {cameraStatus === "ready" ? (
+                <video
+                  ref={videoRef}
+                  className="camera-preview"
+                  autoPlay
+                  muted
+                  playsInline
+                  aria-label="Live webcam preview"
+                />
+              ) : (
+                <Camera size={40} aria-hidden="true" />
+              )}
             </div>
             <span className="eyebrow">Business card</span>
             <h2>Point, capture, confirm.</h2>
-            <p>We’ll extract fields and flag anything uncertain before saving.</p>
-            <label className="primary-button camera-button">
-              <Camera size={18} /> Open camera
+            <p>
+              {cameraStatus === "ready"
+                ? "Webcam is active. Hold the card inside the frame."
+                : "We’ll extract fields and flag anything uncertain before saving."}
+            </p>
+            {cameraStatus === "error" && <p className="camera-error">{cameraError}</p>}
+            <button
+              type="button"
+              className="primary-button camera-button"
+              onClick={cameraStatus === "ready" ? captureFrameForDraft : startCamera}
+              disabled={cameraStatus === "starting"}
+            >
+              <Camera size={18} />
+              {cameraStatus === "starting"
+                ? "Opening camera"
+                : cameraStatus === "ready"
+                  ? "Capture and draft"
+                  : "Open camera"}
+            </button>
+            {cameraStatus === "ready" && (
+              <button type="button" className="secondary-button camera-upload-button" onClick={() => stopCamera()}>
+                Close camera
+              </button>
+            )}
+            <label className="secondary-button camera-upload-button">
+              Upload image
               <input type="file" accept="image/*" capture="environment" aria-label="Photograph business card" />
             </label>
             <span className="privacy-note"><ShieldCheck size={14} /> Image is discarded after extraction by default</span>
@@ -530,6 +646,7 @@ function CaptureView({ onAdd }: { onAdd: (contact: Contact) => void }) {
           </button>
         </form>
       )}
+      <canvas ref={canvasRef} hidden />
     </div>
   );
 }

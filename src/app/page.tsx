@@ -1,5 +1,5 @@
-import { LodestarApp } from "@/components/lodestar-app";
+import { LoginScreen } from "@/components/auth/LoginScreen";
 
 export default function Home() {
-  return <LodestarApp />;
+  return <LoginScreen />;
 }
