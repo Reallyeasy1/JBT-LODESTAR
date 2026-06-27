@@ -150,6 +150,20 @@ Update `_workspace/agent_handoff.md`:
 - Issue #N — blocked by: <root cause>
 ```
 
+**Update `CHANGELOG.md` (single-writer step — orchestrator only):**
+For each PR merged this run:
+1. Read the PR body's `## Changelog Entry` line
+2. If it is "none" or missing, skip
+3. Otherwise append it under the correct `[Unreleased]` heading (`Added` / `Changed` / `Fixed` / `Removed`) in `CHANGELOG.md` at the repo root
+4. Commit `CHANGELOG.md` and `_workspace/agent_handoff.md` together in a single commit to `main`:
+   ```bash
+   git add CHANGELOG.md _workspace/agent_handoff.md
+   git commit -m "chore: update changelog + handoff after sprint run [date]"
+   git push origin main
+   ```
+
+> Agents never touch `CHANGELOG.md` on their feature branches. This single-writer pattern prevents merge conflicts across parallel branches.
+
 Then report a 3-line summary to the user:
 - What was launched
 - What's in review

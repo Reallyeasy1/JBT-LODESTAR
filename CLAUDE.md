@@ -172,6 +172,8 @@ The demo vertical slice: Dashboard → Rank → Open contact → Briefing → Ad
 
 **Planning docs:** `_workspace/` — read `agent_handoff.md` first in every session.
 
+**Shipped-changes log:** `CHANGELOG.md` — append-only record of what has been built and merged. Maintained by the orchestrator post-merge; PR authors supply a one-line entry in their PR body.
+
 **Agent teams require:** `export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
 
 **Change History:**
@@ -179,3 +181,4 @@ The demo vertical slice: Dashboard → Rank → Open contact → Briefing → Ad
 |------|--------|--------|--------|
 | 2026-06-27 | Initial harness setup | All | Bootstrap 6-agent team for parallel development |
 | 2026-06-27 | Add lodestar-sprint-planning skill | .claude/skills/ | Guided sprint planning with upfront Q&A before issue selection |
+| 2026-06-27 | Add CHANGELOG.md + wire into PR/merge workflow | CHANGELOG.md, lodestar-github-workflow, /sprint, lodestar-orchestrate, PR template | Durable append-only record of shipped work; single-writer pattern avoids parallel-branch conflicts |
