@@ -76,6 +76,43 @@ Referenced safety docs (Issue #9): `okf/safety/privacy-and-consent.md`,
 
 ---
 
+## Issue #11 Preflight Audit — 2026-06-27
+
+**Audit scope:** `origin/main@86e10e7` and the application scaffold pending in
+PR #17 (`origin/issue-2-schema-seed@2df331a`).
+
+**Result:** BLOCKED — the audit cannot receive a final PASS until Issues #4, #6,
+and #8 are merged. The current `main` branch has no `src/` directory, and neither
+audited ref contains `src/services/followup.service.ts`, so the required
+`requiresUserReview: z.literal(true)` invariant does not exist yet.
+
+| Issue #11 acceptance check | Current result | Evidence |
+|---|---|---|
+| No LinkedIn scraping or API fetch | NOT APPLICABLE on `main`; PASS for pending PR #17 | `main` has no application source. PR #17 only compares a user-provided `linkedinUrl` with stored contact data in `identity-resolution.service.ts`; it performs no external request, crawling, or scraping. |
+| No `sendMail`, SendGrid, or Nodemailer usage | NOT APPLICABLE on `main`; PASS for pending PR #17 | No matching source exists on `main`; `git grep` returned no matches in PR #17. |
+| Follow-up output requires user review | BLOCKED | `src/services/followup.service.ts` and the follow-up Zod schema are absent from both refs. Re-run after Issue #8. |
+| No autonomous loops, intervals, or cron agents | NOT APPLICABLE on `main`; PASS for pending PR #17 | No matching source exists on `main`; `git grep` returned no matches in PR #17. |
+
+Commands executed:
+
+```bash
+grep -r -n -i "linkedin" src/
+grep -r -n -E "sendMail|sendgrid|nodemailer" src/
+grep -n "requiresUserReview" src/services/followup.service.ts
+grep -r -n -E "autonomous|setInterval|cron" src/
+
+git grep -n -i "linkedin" origin/issue-2-schema-seed -- "src/**"
+git grep -n -E "sendMail|sendgrid|nodemailer" origin/issue-2-schema-seed -- "src/**"
+git grep -n -E "autonomous|setInterval|cron" origin/issue-2-schema-seed -- "src/**"
+```
+
+Required completion step: after Issues #4, #6, and #8 merge, rebase this audit
+branch on `main`, run all Issue #11 acceptance commands against the resulting
+source tree, inspect each match in context, and replace this BLOCKED result with
+the final PASS/FAIL verdict.
+
+---
+
 ## Review Comment Templates
 
 ### BLOCKER
@@ -145,3 +182,4 @@ Run this on every PR labelled `status:review` (and always on any `priority:p0` i
 | Date | Issue # | Finding | Severity | Status |
 |------|---------|---------|----------|--------|
 | 2026-06-27 | — | Checklist infrastructure established — no PR findings yet | — | — |
+| 2026-06-27 | #11 | Preflight audit: application services are not on `main`; follow-up review invariant cannot be verified until #4, #6, and #8 merge | BLOCKER | Open |
