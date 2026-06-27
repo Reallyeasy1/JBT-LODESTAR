@@ -60,6 +60,28 @@ npx prisma studio
 npm run lint
 ```
 
+### Docker (local stack — nginx → app → MySQL)
+
+```bash
+# Build images and start the full stack (http://localhost)
+docker compose up --build
+
+# Seed demo data after the stack is up
+docker compose exec app npx prisma db seed
+
+# Stop and remove containers (keeps DB volume)
+docker compose down
+
+# Stop and wipe DB volume (full reset)
+docker compose down -v
+
+# Open Prisma Studio against the containerised DB
+DATABASE_URL="mysql://root:password@localhost:3306/lodestar" npx prisma studio
+```
+
+The app container has no host port — nginx on `:80` is the only entry point.
+CI runs automatically on push/PR to `main` via `.github/workflows/ci.yml` (lint + typecheck + prisma validate + build).
+
 ---
 
 ## Stack
@@ -238,3 +260,4 @@ BLOCKER/HIGH findings post as review comments; MEDIUM/LOW/PRAISE as a single sum
 | 2026-06-27 | Add Direction section + workflow map | CLAUDE.md | Link project/product direction to `.claude/agents/`, skills, `_workspace/` |
 | 2026-06-27 | Add CHANGELOG.md + wire into PR/merge workflow | CHANGELOG.md, lodestar-github-workflow, /sprint, lodestar-orchestrate, PR template | Durable append-only record of shipped work; single-writer pattern avoids parallel-branch conflicts |
 | 2026-06-27 | Add /pr-review command with GitHub posting | .claude/skills/pr-review/, .claude/commands/pr-review.md | Review PRs and post findings directly to GitHub; --post skips confirmation |
+| 2026-06-27 | Add CI workflow + Docker/nginx local stack | .github/workflows/ci.yml, Dockerfile, docker-compose.yml, nginx/ | Reproducible local run via docker compose; CI gates lint/typecheck/build on every push/PR |
