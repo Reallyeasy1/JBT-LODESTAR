@@ -11,6 +11,41 @@ import { db } from "@/lib/db";
 import { completeAgentRun, startAgentRun } from "@/services/agent-run.service";
 import { checkOutput } from "@/services/verification.service";
 
+export type FollowUpDetail = {
+  id: string;
+  contactId: string;
+  interactionId: string | null;
+  subject: string | null;
+  draftText: string | null;
+  status: string;
+  recommendedTiming: string | null;
+  userApproved: boolean;
+  sentAt: Date | null;
+  createdAt: Date;
+};
+
+export async function getFollowUpById(
+  followUpId: string,
+  userId: string,
+): Promise<FollowUpDetail | null> {
+  const followUp = await db.followUp.findFirst({
+    where: { id: followUpId, userId },
+    select: {
+      id: true,
+      contactId: true,
+      interactionId: true,
+      subject: true,
+      draftText: true,
+      status: true,
+      recommendedTiming: true,
+      userApproved: true,
+      sentAt: true,
+      createdAt: true,
+    },
+  });
+  return followUp ?? null;
+}
+
 const UserReviewInvariantSchema = z.object({
   requiresUserReview: z.literal(true),
 });
