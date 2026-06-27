@@ -60,7 +60,7 @@ gh issue list \
 Apply argument filters if present:
 - `p0` → keep only issues with `priority:p0`
 - `frontend` / `data` / `ai` / `safety` / `okf` → keep only matching `area:` label
-- Skip any issue that already has an assignee
+- **Hard rule: remove any issue where `assignees` is non-empty from the candidate list.** Never assign yourself to an issue someone else has already claimed.
 
 ---
 
@@ -92,7 +92,15 @@ Prefer `parallel-safe` issues when launching multiple agents simultaneously.
 
 For each selected issue:
 
-1. Claim the issue:
+1. **Re-verify the issue is still unassigned** (the list in Step 2 may be stale):
+   ```bash
+   gh issue view <N> --json assignees,labels
+   ```
+   - If `assignees` is non-empty → **skip this issue entirely**, log "Issue #N already claimed by <login> — skipping", and move to the next candidate.
+   - If the issue no longer has `status:ready` → **skip**, same reason.
+   - Only proceed to claim if `assignees` is empty AND `status:ready` is still present.
+
+2. Claim the issue:
    ```bash
    gh issue edit <N> \
      --add-assignee @me \
@@ -100,7 +108,7 @@ For each selected issue:
      --remove-label "status:ready"
    ```
 
-2. Post a plan comment:
+3. Post a plan comment:
    ```bash
    gh issue comment <N> --body "## Plan
    - Agent: <agent-name>
