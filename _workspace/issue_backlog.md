@@ -237,11 +237,12 @@
 - [ ] Briefing section shows: personSummary, whyTheyMatter, talkingPoints[], questionsToAsk[]
 - [ ] Cultural notes section shows cultural notes with uncertainty language
 - [ ] "Generate Briefing" button triggers `POST /api/briefings` if no briefing exists
+- [ ] "Generate Intro (Japanese)" button triggers `POST /api/localisations` (Issue #13); shows returned opener text
 - [ ] "Add Meeting Note" textarea saves to Interaction
 - [ ] "Draft Follow-Up" button visible (can be placeholder linking to Issue #8 work)
 - [ ] Mobile layout correct at 375px
 
-**Dependencies:** Issues #2 + #6 (schema + briefing service)
+**Dependencies:** Issues #2 + #6 (schema + briefing service) + #13 (localisation service)
 
 **Labels:** `area:frontend`, `agent:fullstack-builder`, `priority:p0`, `size:m`, `blocked-by-api`, `status:ready`
 
@@ -378,8 +379,45 @@
 - [ ] Follow-up draft for Sarah Tan includes a subject and ≥2 paragraph body
 - [ ] Demo can be completed in ≤30 seconds by a human clicking through
 
-**Dependencies:** All p0 issues (#2–#8) must be complete
+**Dependencies:** All p0 issues (#2–#8, #13) must be complete
 
 **Labels:** `area:frontend`, `area:docs`, `agent:product-architect`, `agent:fullstack-builder`, `priority:p1`, `size:m`, `status:ready`
 
 **Suggested agents:** product-architect (script) + fullstack-builder (fixes)
+
+---
+
+## Issue #13 — Implement localised intro / opener generation service
+
+**Title:** Implement localised intro / opener generation service
+
+**Goal:** Generate a short, culturally-sensitive opener/intro text from a contact's *stated* language preferences only. Used in the "Generate Intro (Japanese)" demo step.
+
+**Context:** The demo shows a localised contact-card opener for Sarah Tan (who has Japanese listed as a preferred language). This must be strictly grounded in `Contact.languages` — never inferred from name, nationality, or company. The verification service (Issue #6) must run on every output to catch anti-stereotyping violations before saving.
+
+**Scope:**
+- `src/ai/schemas/localisation.schema.ts` (Zod schema: openerText, languageUsed, confidenceScore, warnings[])
+- `src/ai/prompts/localisation.ts`
+- `src/services/localisation.service.ts`
+- `src/app/api/localisations/route.ts` (POST only)
+- Reuse `src/services/verification.service.ts` from Issue #6 for pattern check
+
+**Acceptance criteria:**
+- [ ] `generateLocalisation()` returns a valid Zod-parsed output with `openerText` and `languageUsed`
+- [ ] Uses only `Contact.languages` (stated preferences) — zero demographic inference
+- [ ] `verification.service.ts` flags any "Because they are [X]" or "[Nationality] people" pattern, adds to `warnings[]`, and lowers `confidenceScore`
+- [ ] `AgentRun` record created for every call
+- [ ] Works with mock AI (no API key or env var needed)
+- [ ] `npx tsc --noEmit` exits 0
+
+**Test plan:**
+1. Call `POST /api/localisations` with Sarah Tan's contact ID (languages: ["Japanese", "English"])
+2. Verify response has `openerText` (non-empty) and `languageUsed: "Japanese"`
+3. Manually inject "Because they are Japanese" into mock output — verify `warnings[]` is non-empty
+4. Verify `AgentRun` row created in DB
+
+**Dependencies:** Issue #2 (schema, Contact.languages field), Issue #6 (verification.service.ts)
+
+**Labels:** `area:ai`, `agent:ai-workflow-engineer`, `priority:p0`, `size:s`, `parallel-safe`, `status:ready`
+
+**Suggested agent:** ai-workflow-engineer
