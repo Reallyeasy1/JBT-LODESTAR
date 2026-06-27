@@ -47,7 +47,7 @@ export async function rankContacts(
         promptVersion: "ranking-v1",
         items: {
           create: validated.rankedContacts.map((contact) => ({
-            contactId: contact.contactId,
+            contact: { connect: { id: contact.contactId } },
             rankPosition: contact.rank,
             score: contact.score,
             opportunityType: contact.opportunityType,

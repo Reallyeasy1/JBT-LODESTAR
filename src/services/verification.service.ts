@@ -33,5 +33,5 @@ export function checkOutput(output: unknown, _type: VerificationType): Verificat
     warnings.add("Overconfident language detected; qualify the claim or add supporting evidence.");
   }
 
-  return { warnings: [...warnings], blockers: [...blockers] };
+  return { warnings: Array.from(warnings), blockers: Array.from(blockers) };
 }
