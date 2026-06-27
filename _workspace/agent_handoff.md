@@ -22,7 +22,7 @@ This file records phase completions, current state, and what's queued for each a
 - [x] Issue #2 Prisma schema + seed merged via PR #17 (2026-06-27)
 
 ### In Progress
-- Nothing currently labelled `status:in-progress` on GitHub
+- Issue #13 — localised intro / opener generation — status:in-progress on GitHub, assigned to keezhenxian
 
 ### In Review
 - Issue #3 — seeded event dashboard — PR #21, role: fullstack-builder
@@ -43,15 +43,15 @@ This file records phase completions, current state, and what's queued for each a
 | 6 | Briefing service | s | ai-workflow-engineer | C | Day 3 | review |
 | 8 | Follow-up service | s | ai-workflow-engineer | C | Day 3 | review |
 | 5 | Ranking UI | m | fullstack-builder | D | Day 3 | blocked-by-#4 |
-| 13 | Localisation service | s | ai-workflow-engineer | C | Day 4 | blocked-by-#6-merge |
+| 13 | Localisation service | s | ai-workflow-engineer | C | Day 4 | in-progress |
 | 11 | Safety audit | s | safety-qa-engineer | B | Day 4 | blocked-by-#4,#6,#8 |
 | 7 | Contact detail page | m | fullstack-builder | D | Day 5 | blocked-by-#6,#8,#13 |
 | 12 | Demo polish | m | product-arch+fullstack | E | Day 6 | blocked-by-all-p0 |
 
 ### Blocked
-- #13 — waiting for #6 to merge
 - #5 — waiting for #4 (ranking service)
 - #7 — waiting for #6, #8, #13
+- #11 — waiting for #4, #6, #8 implementation PRs to merge
 - #12 — waiting for all p0
 
 ### Pre-sprint prerequisite
@@ -67,7 +67,7 @@ Resolved by Issue #2 / PR #17. The repo now has the Next.js scaffold, Prisma sch
 | product-architect | — | Idle | — |
 | fullstack-builder | #3 | Review | PR #21 opened |
 | data-backend-engineer | #2 | Done | PR #17 merged |
-| ai-workflow-engineer | #4, #6, #8 | Review | Ranking service, briefing service, and follow-up service in review |
+| ai-workflow-engineer | #4, #6, #8, #13 | Active | Ranking service, briefing service, and follow-up service in review; localisation in progress |
 | safety-qa-engineer | — | Idle | Waiting for Phase 3 |
 
 ---
@@ -103,11 +103,12 @@ QA safety audit (#11) unlocks after #4, #6, #8 merged.
 - Issue #8 — waiting for safety-qa-engineer / PR review
 
 ### Queued next (status:ready)
-- Issue #13 — Implement localised intro / opener generation service — unblocked by: PR #19 merge for Issue #6 verification service
+- None currently. The GitHub ready queue was stale and has been moved to blocked where dependencies are not merged yet.
 
 ### Blockers
 - Issue #5 — blocked by: Issue #4 ranking service
 - Issue #7 — blocked by: Issues #6, #8, and #13
+- Issue #11 — blocked by: Issues #4, #6, and #8
 - Issue #12 — blocked by: all p0 demo-path issues
 
 ---
