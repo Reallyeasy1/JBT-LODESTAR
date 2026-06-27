@@ -86,6 +86,10 @@ and #8 are merged. The current `main` branch has no `src/` directory, and neithe
 audited ref contains `src/services/followup.service.ts`, so the required
 `requiresUserReview: z.literal(true)` invariant does not exist yet.
 
+> **Deferred checks:** 3, 5–9 — these require `src/services/` to exist (AI schemas,
+> briefing/ranking/follow-up services, verification service, prompts directory).
+> Re-run after Issue #4 (briefing), #6 (ranking), and #8 (follow-up) merge.
+
 | Issue #11 acceptance check | Current result | Evidence |
 |---|---|---|
 | No LinkedIn scraping or API fetch | NOT APPLICABLE on `main`; PASS for pending PR #17 | `main` has no application source. PR #17 only compares a user-provided `linkedinUrl` with stored contact data in `identity-resolution.service.ts`; it performs no external request, crawling, or scraping. |
@@ -159,7 +163,7 @@ Run this on every PR labelled `status:review` (and always on any `priority:p0` i
 
 1. **Clone the PR branch:**
    `gh pr checkout <PR-number>` (or `git fetch origin <branch> && git checkout <branch>`).
-2. **Run each grep command** in Checks 1–9. Record the result as PASS / FAIL / NOT APPLICABLE.
+2. **Run each `rg` command** in Checks 1–9. Record the result as PASS / FAIL / NOT APPLICABLE.
    - A grep hit is not always a violation — inspect each match in context before deciding.
 3. **Run the build checks:**
    - `npx tsc --noEmit` (Check 10 — must exit 0)
