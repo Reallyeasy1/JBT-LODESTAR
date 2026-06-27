@@ -5,7 +5,7 @@ import { LocalisationOutputSchema } from "@/ai/schemas/localisation.schema";
 import {
   applyLocalisationVerification,
   selectStatedLanguage,
-} from "@/services/localisation.service";
+} from "@/services/localisation-rules";
 
 const promptInput = {
   contact: {
