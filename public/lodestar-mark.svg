@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Lodestar logo">
+  <rect width="128" height="128" rx="32" fill="#172c24"/>
+  <path d="M64 18l9.5 36.5L110 64l-36.5 9.5L64 110l-9.5-36.5L18 64l36.5-9.5L64 18z" fill="#f4b860"/>
+  <circle cx="64" cy="64" r="12" fill="#f6f3ec"/>
+</svg>
