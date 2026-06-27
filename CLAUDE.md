@@ -167,6 +167,7 @@ The demo vertical slice: Dashboard → Rank → Open contact → Briefing → Ad
 - `lodestar-fullstack-build` — Next.js pages, components, API routes
 - `lodestar-ai-workflows` — AI services, Zod schemas, OKF files
 - `lodestar-safety-qa` — safety reviews, build checks, contract verification
+- `lodestar-sprint-planning` — guided sprint planning (asks all questions first, then assigns issues)
 - `lodestar-github-workflow` — claim an issue, create a branch, open a PR
 
 **Planning docs:** `_workspace/` — read `agent_handoff.md` first in every session.
@@ -177,3 +178,4 @@ The demo vertical slice: Dashboard → Rank → Open contact → Briefing → Ad
 | Date | Change | Target | Reason |
 |------|--------|--------|--------|
 | 2026-06-27 | Initial harness setup | All | Bootstrap 6-agent team for parallel development |
+| 2026-06-27 | Add lodestar-sprint-planning skill | .claude/skills/ | Guided sprint planning with upfront Q&A before issue selection |
