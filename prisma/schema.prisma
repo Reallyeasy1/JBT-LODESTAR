@@ -1,0 +1,318 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  name           String?
+  authProvider   String?
+  authProviderId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  profile   UserProfile?
+  events    Event[]
+  contacts  Contact[]
+  agentRuns AgentRun[]
+  auditLogs AuditLog[]
+}
+
+model UserProfile {
+  id                         String   @id @default(uuid())
+  userId                     String   @unique
+  displayName                String?
+  title                      String?
+  company                    String?
+  bio                        String?  @db.Text
+  linkedinUrl                String?
+  websiteUrl                 String?
+  languages                  Json?
+  networkingGoals            Json?
+  whatIOffer                 Json?
+  preferredTone              String?
+  defaultContactCardLanguage String?
+  privacySettings            Json?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id          String    @id @default(uuid())
+  userId      String
+  name        String
+  location    String?
+  startDate   DateTime?
+  endDate     DateTime?
+  industry    String?
+  description String?   @db.Text
+  eventGoal   String?   @db.Text
+  tags        Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contacts Contact[]
+  rankings Ranking[]
+
+  @@index([userId])
+}
+
+model Contact {
+  id               String   @id @default(uuid())
+  userId           String
+  eventId          String?
+  fullName         String?
+  title            String?
+  company          String?
+  email            String?
+  phone            String?
+  linkedinUrl      String?
+  websiteUrl       String?
+  languages        Json?
+  sourceType       String?
+  sourceConfidence Float?
+  tags             Json?
+  notes            String?  @db.Text
+  metadata         Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event          Event?         @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  interactions   Interaction[]
+  briefings      Briefing[]
+  rankingItems   RankingItem[]
+  followUps      FollowUp[]
+  localisations  Localisation[]
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([email])
+  @@index([phone])
+  @@index([linkedinUrl])
+}
+
+model ContactImport {
+  id               String   @id @default(uuid())
+  userId           String
+  eventId          String?
+  sourceType       String
+  fileId           String?
+  sourcePayload    Json?
+  rawExtractedText String?  @db.Text
+  parsedJson       Json?
+  status           String   @default("pending")
+  errorMessage     String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([status])
+}
+
+model Interaction {
+  id              String   @id @default(uuid())
+  userId          String
+  contactId       String
+  eventId         String?
+  interactionTime DateTime @default(now())
+  meetingContext  String?  @db.Text
+  userNotes       String?  @db.Text
+  aiSummary       String?  @db.Text
+  nextAction      String?  @db.Text
+  outcome         String?
+  createdAt       DateTime @default(now())
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([contactId])
+  @@index([eventId])
+}
+
+model Briefing {
+  id                String   @id @default(uuid())
+  userId            String
+  contactId         String
+  agentRunId        String?
+  personSummary     String?  @db.Text
+  whyTheyMatter     String?  @db.Text
+  likelyGoal        String?  @db.Text
+  decisionAuthority String?
+  talkingPoints     Json?
+  questionsToAsk    Json?
+  culturalNotes     Json?
+  warnings          Json?
+  confidenceScore   Float?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([contactId])
+}
+
+model Ranking {
+  id            String   @id @default(uuid())
+  userId        String
+  eventId       String?
+  goalText      String   @db.Text
+  modelName     String?
+  promptVersion String?
+  createdAt     DateTime @default(now())
+
+  event Event?       @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  items RankingItem[]
+
+  @@index([userId])
+  @@index([eventId])
+}
+
+model RankingItem {
+  id              String   @id @default(uuid())
+  rankingId       String
+  contactId       String
+  rankPosition    Int
+  score           Float?
+  opportunityType String?
+  reasoning       String?  @db.Text
+  nextAction      String?  @db.Text
+  evidence        Json?
+  confidence      Float?
+  createdAt       DateTime @default(now())
+
+  ranking Ranking @relation(fields: [rankingId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([rankingId])
+  @@index([contactId])
+  @@index([rankPosition])
+}
+
+model FollowUp {
+  id                String    @id @default(uuid())
+  userId            String
+  contactId         String
+  interactionId     String?
+  subject           String?
+  draftText         String?   @db.Text
+  status            String    @default("drafted")
+  recommendedTiming String?
+  userApproved      Boolean   @default(false)
+  sentAt            DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([contactId])
+  @@index([status])
+}
+
+model Localisation {
+  id              String   @id @default(uuid())
+  userId          String
+  contactId       String
+  agentRunId      String?
+  openerText      String?  @db.Text
+  languageUsed    String?
+  confidenceScore Float?
+  warnings        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([contactId])
+}
+
+model AgentRun {
+  id            String   @id @default(uuid())
+  userId        String
+  taskType      String?
+  agentType     String?
+  modelName     String?
+  promptVersion String?
+  inputJson     Json?
+  outputJson    Json?
+  status        String?
+  latencyMs     Int?
+  tokenInput    Int?
+  tokenOutput   Int?
+  costEstimate  Float?
+  errorMessage  String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  toolCalls ToolCall[]
+
+  @@index([userId])
+  @@index([agentType])
+  @@index([taskType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ToolCall {
+  id           String   @id @default(uuid())
+  agentRunId   String
+  toolName     String?
+  inputJson    Json?
+  outputJson   Json?
+  status       String?
+  latencyMs    Int?
+  errorMessage String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  agentRun AgentRun @relation(fields: [agentRunId], references: [id], onDelete: Cascade)
+
+  @@index([agentRunId])
+  @@index([toolName])
+  @@index([status])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  entityType String?
+  entityId   String?
+  action     String?
+  oldValue   Json?
+  newValue   Json?
+  ipAddress  String?
+  userAgent  String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Feedback {
+  id           String   @id @default(uuid())
+  userId       String
+  entityType   String?
+  entityId     String?
+  rating       Int?
+  feedbackText String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([rating])
+}
