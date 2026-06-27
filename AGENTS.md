@@ -167,6 +167,14 @@ Use these Codex role playbooks in `.codex/agents/` when work matches their scope
 For sprint launch behavior, use `.codex/commands/sprint.md`.
 For sprint planning requests such as "plan the next sprint" or "what should we build this sprint?", use `.codex/skills/lodestar-sprint-planning.md` first. That playbook asks all required planning questions before reading files or selecting issues.
 
+## Product Skill Routing
+
+For product artifact generation and refinement, use:
+
+- `.agents/skills/product-manager/SKILL.md`
+
+Use this for PRDs, user stories, acceptance criteria, roadmap critique, requirement clarity, and GitHub issue breakdowns. Keep outputs narrow, testable, and implementation-ready.
+
 ## GitHub Issue Workflow
 
 When working from GitHub issues:
