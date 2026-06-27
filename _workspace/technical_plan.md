@@ -3,6 +3,8 @@
 **Last updated:** 2026-06-27
 **Owner:** lodestar-orchestrator (maintained by data-backend-engineer + ai-workflow-engineer contributions)
 
+> Current-state note: this file was created as an initial implementation plan and parts of the phase/status sections are now stale. For the current backend architecture and code-level implementation map, use `docs/backend-architecture-current-implementation.md` as the authoritative document.
+
 ---
 
 ## Stack (locked — do not change without orchestrator approval)
