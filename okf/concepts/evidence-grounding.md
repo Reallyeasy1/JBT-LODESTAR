@@ -11,7 +11,7 @@ All AI outputs — briefings, rankings, cultural notes — must be grounded in e
 | Company and industry | `Contact.company` | High |
 | User meeting notes | `Interaction.userNotes` | High |
 | Stated language preference | `Contact.languages` | High |
-| LinkedIn URL (existence) | `Contact.linkedinUrl` | Medium |
+| LinkedIn URL (existence only — not fetched) | `Contact.linkedinUrl` | Low |
 | Email domain | `Contact.email` | Low–Medium |
 | Source confidence | `ContactImport.sourceConfidence` | Modifier |
 | Tags | `Contact.tags` | Medium |
