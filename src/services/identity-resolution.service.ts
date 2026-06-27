@@ -51,7 +51,7 @@ export async function resolveContact(
     if (match) return { result: "duplicate", existingContactId: match.id, confidence: 0.99 };
   }
 
-  // Same normalised full name + same company → possible-duplicate
+  // Same normalised full name + same company -> possible-duplicate
   if (input.fullName && input.company) {
     const candidates = await db.contact.findMany({
       where: { userId, company: input.company },
@@ -59,22 +59,30 @@ export async function resolveContact(
     });
 
     const normInput = normaliseName(input.fullName);
+    // Filter single-char tokens to avoid spurious matches ("Jo A" vs "Jo B")
+    const inputParts = normInput.split(" ").filter((p) => p.length > 1);
+    let partialMatch: string | null = null;
 
     for (const c of candidates) {
       if (!c.fullName) continue;
       const normExisting = normaliseName(c.fullName);
 
       if (normInput === normExisting) {
-        return { result: "duplicate", existingContactId: c.id, confidence: 0.95 };
+        // Exact match wins; return immediately.
+        return { result: "possible-duplicate", existingContactId: c.id, confidence: 0.95 };
       }
 
-      // Partial name match (first name or last name shared)
-      const inputParts = normInput.split(" ");
-      const existingParts = normExisting.split(" ");
-      const sharedParts = inputParts.filter((p) => existingParts.includes(p));
-      if (sharedParts.length > 0) {
-        return { result: "possible-duplicate", existingContactId: c.id, confidence: 0.65 };
+      // Track first partial match but keep scanning for an exact match
+      if (!partialMatch) {
+        const existingParts = normExisting.split(" ").filter((p) => p.length > 1);
+        if (inputParts.some((p) => existingParts.includes(p))) {
+          partialMatch = c.id;
+        }
       }
+    }
+
+    if (partialMatch) {
+      return { result: "possible-duplicate", existingContactId: partialMatch, confidence: 0.65 };
     }
   }
 

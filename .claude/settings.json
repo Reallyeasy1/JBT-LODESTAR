@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh issue edit *)",
+      "Bash(gh issue comment *)",
+      "Bash(gh pr create *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(npx prisma generate)",
+      "Bash(npx prisma migrate dev *)",
+      "Bash(npx prisma db push)",
+      "Bash(npx prisma db seed)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npm run lint)",
+      "Bash(npm install)",
+      "Bash(npm install *)",
+      "Bash(npx create-next-app *)"
+    ]
+  }
+}

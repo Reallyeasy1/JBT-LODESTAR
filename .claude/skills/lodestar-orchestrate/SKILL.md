@@ -99,7 +99,7 @@ After each implementation batch, invoke `safety-qa-engineer` subagent:
 Orchestrator decisions:
 - **BLOCKER found** → assign fix back to owning agent, do not merge, re-queue for QA
 - **WARNING found** → document in issue, merge at orchestrator discretion
-- **All clear** → merge PR, close issue, move to `status:done`
+- **All clear** → merge PR, close issue, move to `status:done`, and capture the PR's `## Changelog Entry` line for the Phase 4 handoff update
 
 ---
 
@@ -108,6 +108,7 @@ Orchestrator decisions:
 Update:
 - `_workspace/agent_handoff.md` — what was completed, what's queued next
 - `_workspace/technical_plan.md` — any deviations from plan
+- `CHANGELOG.md` `[Unreleased]` — transcribe each merged PR's `## Changelog Entry` line under the correct heading (`Added` / `Changed` / `Fixed` / `Removed`); commit alongside `agent_handoff.md` as a single commit to `main`. Orchestrator is the single writer — agents never edit `CHANGELOG.md` on feature branches.
 - CLAUDE.md harness change log with date and description
 
 ---

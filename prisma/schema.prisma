@@ -16,11 +16,13 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  profile   UserProfile?
-  events    Event[]
-  contacts  Contact[]
-  agentRuns AgentRun[]
-  auditLogs AuditLog[]
+  profile        UserProfile?
+  events         Event[]
+  contacts       Contact[]
+  agentRuns      AgentRun[]
+  auditLogs      AuditLog[]
+  contactImports ContactImport[]
+  interactions   Interaction[]
 }
 
 model UserProfile {
@@ -114,6 +116,8 @@ model ContactImport {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([eventId])
   @@index([status])
@@ -133,6 +137,7 @@ model Interaction {
   createdAt       DateTime @default(now())
 
   contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([contactId])

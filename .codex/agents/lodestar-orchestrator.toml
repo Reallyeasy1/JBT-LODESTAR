@@ -48,6 +48,8 @@ Manages all labels. Creates/refines issues when product direction changes.
 - Any issue that spans more than two `area:` labels
 - After any merge to check what's unlocked
 
+For sprint planning requests, use `.codex/skills/lodestar-sprint-planning.md` before selecting issues. It must ask the required planning questions first.
+
 ## What NOT To Do
 - Do not implement features directly - delegate to specialist agents
 - Do not modify `src/`, `prisma/`, or `okf/` during implementation phases

@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
-import { rankContacts } from "@/services/ranking.service";
+import { RankingServiceError, rankContacts } from "@/services/ranking.service";
 
 const RankingRequestSchema = z.object({
   eventId: z.string().min(1),
   goalText: z.string().trim().min(3).optional(),
 });
+
+export function rankingErrorResponse(error: unknown): { message: string; status: number } {
+  if (error instanceof RankingServiceError) {
+    return { message: error.message, status: error.status };
+  }
+
+  return { message: "Unable to rank contacts", status: 500 };
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -24,8 +32,10 @@ export async function POST(request: NextRequest) {
     const result = await rankContacts(parsed.data.eventId, parsed.data.goalText, user.id);
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to rank contacts";
-    const status = message === "Event not found" ? 404 : 422;
-    return NextResponse.json({ error: message }, { status });
+    const response = rankingErrorResponse(error);
+    if (response.status === 500) {
+      console.error("Unexpected ranking failure", error);
+    }
+    return NextResponse.json({ error: response.message }, { status: response.status });
   }
 }

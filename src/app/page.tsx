@@ -8,7 +8,7 @@ export default function Home() {
         Scan the room. Know who matters. Follow up before the opportunity goes cold.
       </p>
       <Link
-        href="/events/cle00000000000000000001"
+        href={`/events/${process.env.NEXT_PUBLIC_DEMO_EVENT_ID ?? "cle00000000000000000001"}`}
         className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
       >
         Open Demo Event →

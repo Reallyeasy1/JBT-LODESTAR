@@ -6,6 +6,7 @@ This directory mirrors the Claude Code harness in `.claude/` for Codex-oriented 
 - Sprint command playbook: `commands/sprint.md`
 - Specialist role playbooks: `agents/*.md`
 - Reusable workflow playbooks: `skills/*.md`
+- Structured sprint planning skill: `skills/lodestar-sprint-planning.md`
 
 Codex should treat `AGENTS.md` as the canonical project instruction file, then read the relevant `.codex/agents/` or `.codex/skills/` file for the current task.
 
